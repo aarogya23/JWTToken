@@ -12,7 +12,7 @@ import com.project.JWTToken.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Service    
 @RequiredArgsConstructor
 public class AuthenticationService {
 
