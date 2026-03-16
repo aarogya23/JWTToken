@@ -55,22 +55,12 @@
 <body>
     <h1>JWT Chat Application</h1>
 
-    <div id="login-section">
-        <h2>Login</h2>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="login()">Login</button>
-        <button onclick="signup()">Sign Up</button>
-        <br><br>
-        <button onclick="googleLogin()">Login with Google</button>
-    </div>
-
-    <div id="chat-section" style="display: none;">
+    <div id="chat-section">
         <h2>Chat Room</h2>
         <div id="chat-messages"></div>
         <input type="text" id="message-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
         <button onclick="sendMessage()">Send</button>
-        <button onclick="disconnect()">Disconnect</button>
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
@@ -78,80 +68,31 @@
         let currentUser = null;
         let jwtToken = null;
 
-        // Get token from URL parameters (for OAuth redirect)
+        // Check for OAuth2 token in URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('token');
         if (tokenFromUrl) {
             jwtToken = tokenFromUrl;
             localStorage.setItem('jwtToken', jwtToken);
-            showChat();
-            connect();
+            // Remove token from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            fetch('/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.token) {
-                    jwtToken = data.token;
-                    localStorage.setItem('jwtToken', jwtToken);
-                    currentUser = email;
-                    showChat();
-                    connect();
-                } else {
-                    alert('Login failed');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Login failed');
-            });
-        }
-
-        function signup() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            fetch('/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    fullName: email.split('@')[0]
-                }),
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Signup successful! Please login.');
-                } else {
-                    alert('Signup failed');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Signup failed');
-            });
-        }
-
-        function googleLogin() {
-            window.location.href = '/oauth2/authorization/google';
-        }
+        // Check for stored token on page load
+        window.onload = function() {
+            const storedToken = localStorage.getItem('jwtToken');
+            if (storedToken) {
+                jwtToken = storedToken;
+                showChat();
+                connect();
+            } else {
+                // Redirect to login page if not authenticated
+                window.location.href = '/login.html';
+            }
+        };
 
         function showChat() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('chat-section').style.display = 'block';
+            // Chat is always visible now
         }
 
         function connect() {
@@ -206,15 +147,14 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        function disconnect() {
+        function logout() {
             if (stompClient !== null) {
                 stompClient.disconnect();
             }
-            document.getElementById('chat-section').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
             localStorage.removeItem('jwtToken');
             jwtToken = null;
             currentUser = null;
+            window.location.href = '/login.html';
         }
 
         function handleKeyPress(event) {
@@ -230,6 +170,9 @@
                 jwtToken = storedToken;
                 showChat();
                 connect();
+            } else {
+                // Redirect to login page if not authenticated
+                window.location.href = '/login.html';
             }
         };
     </script>

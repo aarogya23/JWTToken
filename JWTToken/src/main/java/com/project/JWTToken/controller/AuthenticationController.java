@@ -32,8 +32,19 @@ public class AuthenticationController {
      */
     @PostMapping("/signup")
     public ResponseEntity<User> register(@RequestBody @Valid RegisterUserDto dto) {
-        User registeredUser = authenticationService.signup(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
+        try {
+            User registeredUser = authenticationService.signup(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
+        } catch (RuntimeException e) {
+            // Handle duplicate email or other business logic errors
+            System.err.println("Signup error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            // Handle database or other system errors
+            System.err.println("Signup system error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
@@ -64,8 +75,17 @@ public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto dto)
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(errorResponse);
     } catch (Exception ex) {
-        // optional: catch unexpected errors
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        // Log the error for debugging
+        System.err.println("Login error: " + ex.getMessage());
+        ex.printStackTrace();
+
+        LoginResponse errorResponse = LoginResponse.builder()
+                .token(null)
+                .expiresIn(0)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorResponse);
     }
 }
 }

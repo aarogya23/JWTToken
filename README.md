@@ -8,6 +8,7 @@ This Spring Boot application provides JWT-based authentication with Google OAuth
 - Google OAuth2 authentication
 - Real-time chat with WebSocket/STOMP
 - Secure WebSocket connections with JWT authentication
+- Dedicated login/registration page with modern UI
 
 ## API Endpoints
 
@@ -22,25 +23,26 @@ This Spring Boot application provides JWT-based authentication with Google OAuth
 - STOMP destination: `/app/chat.addUser`
 - Subscribe to: `/topic/public`
 
-## Testing the Chat
+## Testing the Application
 
-1. **Start the application**
+1. **Start the application:**
    ```bash
    ./mvnw spring-boot:run
    ```
 
-2. **Access the chat interface**
-   - Open: `http://localhost:8080/chat.html`
+2. **Access the login page:**
+   - Open: `http://localhost:8080/login.html`
 
-3. **Login options:**
-   - **Regular login:** Enter email/password and click "Login"
-   - **Sign up:** Enter email/password and click "Sign Up"
-   - **Google login:** Click "Login with Google"
+3. **Authentication options:**
+   - **Register:** Create a new account with email/password
+   - **Login:** Sign in with existing credentials
+   - **Google OAuth2:** Click "Continue with Google" (credentials already configured)
 
-4. **Start chatting:**
-   - After login, you'll be connected to the chat room
-   - Type messages and press Enter or click Send
-   - Messages are broadcast to all connected users
+4. **Chat functionality:**
+   - After login, you'll be redirected to the chat room
+   - Send messages to all connected users in real-time
+   - User join notifications are displayed
+   - Click "Logout" to return to login page
 
 ## WebSocket Connection
 
