@@ -36,9 +36,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Generate JWT token
         String jwtToken = jwtService.generateToken(user);
 
-        // Redirect to frontend with token (or return JSON)
-        // For simplicity, redirect to a success page with token in URL
-        String redirectUrl = "http://localhost:3000/login/success?token=" + jwtToken; // Adjust frontend URL
+        // Redirect to login page with token (login.html will handle the token and redirect to chat)
+        String redirectUrl = "http://localhost:8080/login.html?token=" + jwtToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

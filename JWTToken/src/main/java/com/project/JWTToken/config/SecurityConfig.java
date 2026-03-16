@@ -38,7 +38,7 @@ public class SecurityConfig {
 
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/oauth2/**", "/login/**").permitAll()
+                .requestMatchers("/auth/**", "/oauth2/**", "/login/**", "/ws/**", "/login.html", "/chat.html", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
             )
 
