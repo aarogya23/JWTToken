@@ -9,12 +9,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.project.JWTToken.Service.AuthenticationService;
+import com.project.JWTToken.Service.JwtService;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationService authenticationService;
+    private final JwtService jwtService;
+
+    @Bean
+    public OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
+        return new OAuth2AuthenticationSuccessHandler(authenticationService, jwtService);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -28,8 +38,14 @@ public class SecurityConfig {
 
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**", "/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated()
+            )
+
+            // OAuth2 Login
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/oauth2/authorization/google")
+                .successHandler(oauth2AuthenticationSuccessHandler())
             )
 
             // Add JWT filter

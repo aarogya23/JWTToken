@@ -45,4 +45,16 @@ public class AuthenticationService {
         return userRepository.findByEmail(input.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
     }
+
+    public User findOrCreateOAuth2User(String email, String name) {
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(email)
+                            .fullName(name)
+                            .oauthProvider("google")
+                            .build();
+                    return userRepository.save(newUser);
+                });
+    }
 }

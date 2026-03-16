@@ -35,8 +35,9 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
+
+    private String oauthProvider;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
