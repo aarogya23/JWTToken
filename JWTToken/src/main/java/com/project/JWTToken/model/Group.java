@@ -9,29 +9,23 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_messages")
+@Table(name = "groups")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessage {
+public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private MessageType type;
+    @Column(nullable = false, unique = true)
+    private String name;
 
-    private String content;
-
-    private String sender;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @Column(nullable = false)
-    private Long groupId;  // Changed from room to groupId
-
-    private LocalDateTime timestamp;
-
-    public enum MessageType {
-        CHAT, JOIN, LEAVE
-    }
+    private LocalDateTime createdAt;
 }

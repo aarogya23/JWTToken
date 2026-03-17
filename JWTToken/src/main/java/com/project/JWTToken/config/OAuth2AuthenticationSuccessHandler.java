@@ -36,8 +36,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Generate JWT token
         String jwtToken = jwtService.generateToken(user);
 
-        // Redirect to login page with token (login.html will handle the token and redirect to chat)
-        String redirectUrl = "http://localhost:8080/login.html?token=" + jwtToken;
+        // Redirect to groups page with token (groups.html will handle the token)
+        String redirectUrl = "http://localhost:8080/groups.html?token=" + jwtToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

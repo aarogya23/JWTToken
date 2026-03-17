@@ -30,18 +30,25 @@ This Spring Boot application provides JWT-based authentication with Google OAuth
    ./mvnw spring-boot:run
    ```
 
-2. **Access the login page:**
-   - Open: `http://localhost:8080/login.html`
+2. **Access the groups page:**
+   - Open: `http://localhost:8080/groups.html`
 
 3. **Authentication options:**
    - **Register:** Create a new account with email/password
    - **Login:** Sign in with existing credentials
    - **Google OAuth2:** Click "Continue with Google" (credentials already configured)
 
-4. **Chat functionality:**
-   - After login, you'll be redirected to the chat room
-   - Send messages to all connected users in real-time
+4. **Group management:**
+   - Create new groups
+   - View existing groups
+   - Click on a group to join the chat
+
+5. **Chat functionality:**
+   - After joining a group, you'll be redirected to the chat room
+   - Send messages to all connected users in the group in real-time
    - User join notifications are displayed
+   - Messages are persisted and visible to new users joining the group
+   - Click "Back to Groups" to return to group selection
    - Click "Logout" to return to login page
 
 ## WebSocket Connection

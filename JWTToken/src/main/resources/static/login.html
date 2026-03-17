@@ -300,15 +300,15 @@
             localStorage.setItem('jwtToken', tokenFromUrl);
             // Remove token from URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            // Redirect to chat
-            window.location.href = '/chat.html';
+            // Redirect to groups
+            window.location.href = '/groups.html';
         }
 
         // Check if already logged in
         const storedToken = localStorage.getItem('jwtToken');
         if (storedToken) {
-            // Redirect to chat if already authenticated
-            window.location.href = '/chat.html';
+            // Redirect to groups if already authenticated
+            window.location.href = '/groups.html';
         }
 
         // Login Form Handler
@@ -335,7 +335,7 @@
                     localStorage.setItem('jwtToken', data.token);
                     showAlert('Login successful! Redirecting...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/chat.html';
+                        window.location.href = '/groups.html';
                     }, 1000);
                 } else {
                     showAlert(data.message || 'Login failed. Please check your credentials.', 'error');

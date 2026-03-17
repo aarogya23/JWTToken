@@ -3,178 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JWT Chat Application</title>
+    <title>Group Chat</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
         }
-        #chat-messages {
-            border: 1px solid #ccc;
-            height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-            margin-bottom: 10px;
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
         }
-        #message-input {
-            width: 70%;
-            padding: 10px;
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
+
+        .chat-header h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .chat-header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-header button {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding: 5px;
             border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
-        .message.join {
-            background-color: #d4edda;
-            color: #155724;
+
+        .chat-header button:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
-        .message.chat {
-            background-color: #f8f9fa;
+
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
         }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
         .message.own {
-            background-color: #cce5ff;
-            text-align: right;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 20px;
+        }
+
+        .message.other {
+            background: white;
+            margin-right: 20px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .message.own .message-sender {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .message.own .message-time {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e1e5e9;
+            display: flex;
+            gap: 10px;
+        }
+
+        #message {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        #message:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>JWT Chat Application</h1>
-
-    <div id="chat-section">
-        <h2>Chat Room</h2>
-        <div id="chat-messages"></div>
-        <input type="text" id="message-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">Send</button>
-        <button onclick="logout()">Logout</button>
+    <div class="container">
+        <div class="chat-header">
+            <h1 id="groupTitle">Loading...</h1>
+            <div class="chat-header-buttons">
+                <button onclick="goBack()">Back to Groups</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div id="chat" class="loading">Loading messages...</div>
+        <div class="chat-input-container">
+            <input id="message" type="text" placeholder="Type a message and press Enter...">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
     <script>
-        let stompClient = null;
-        let currentUser = null;
-        let jwtToken = null;
-
-        // Check for OAuth2 token in URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const tokenFromUrl = urlParams.get('token');
-        if (tokenFromUrl) {
-            jwtToken = tokenFromUrl;
-            localStorage.setItem('jwtToken', jwtToken);
-            // Remove token from URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+        const groupId = urlParams.get('groupId');
+        const token = localStorage.getItem('jwtToken');
+        let currentUser = null;
+        let stompClient = null;
+
+        if (!groupId || !token) {
+            window.location.href = '/groups.html';
         }
 
-        // Check for stored token on page load
-        window.onload = function() {
-            const storedToken = localStorage.getItem('jwtToken');
-            if (storedToken) {
-                jwtToken = storedToken;
-                showChat();
-                connect();
-            } else {
-                // Redirect to login page if not authenticated
-                window.location.href = '/login.html';
-            }
-        };
+        function goBack() {
+            window.location.href = '/groups.html';
+        }
 
-        function showChat() {
-            // Chat is always visible now
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = '/login.html';
         }
 
         function connect() {
-            const socket = new SockJS('/ws?token=' + jwtToken);
+            const socket = new SockJS('/ws?token=' + token);
             stompClient = Stomp.over(socket);
-
-            stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
-                stompClient.subscribe('/topic/public', function (message) {
+            stompClient.connect({}, function(frame) {
+                console.log('Connected:', frame);
+                stompClient.subscribe('/topic/group/' + groupId, function(message) {
                     showMessage(JSON.parse(message.body));
                 });
-
-                stompClient.send("/app/chat.addUser", {}, JSON.stringify({
-                    sender: currentUser || 'Anonymous',
-                    type: 'JOIN'
-                }));
-            }, function (error) {
-                console.log('Error: ' + error);
-                alert('Connection failed. Please check your authentication.');
+                loadHistory();
+            }, function(error) {
+                console.error('Connection error:', error);
+                setTimeout(connect, 5000);
             });
         }
 
         function sendMessage() {
-            const messageInput = document.getElementById('message-input');
+            const messageInput = document.getElementById('message');
             const messageContent = messageInput.value.trim();
+            if (!messageContent || !stompClient) return;
 
-            if (messageContent && stompClient) {
-                const chatMessage = {
-                    sender: currentUser || 'Anonymous',
-                    content: messageContent,
-                    type: 'CHAT'
-                };
+            const message = {
+                content: messageContent,
+                sender: currentUser.fullName,
+                groupId: groupId,
+                timestamp: new Date().toISOString()
+            };
 
-                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
-                messageInput.value = '';
-            }
+            stompClient.send('/app/chat.sendMessage/' + groupId, {}, JSON.stringify(message));
+            messageInput.value = '';
+            messageInput.focus();
         }
 
         function showMessage(message) {
-            const messagesDiv = document.getElementById('chat-messages');
-            const messageElement = document.createElement('div');
-            messageElement.className = 'message ' + message.type.toLowerCase();
-
-            if (message.type === 'JOIN') {
-                messageElement.textContent = message.sender + ' joined the chat!';
-            } else if (message.type === 'CHAT') {
-                const timestamp = new Date(message.timestamp).toLocaleTimeString();
-                messageElement.innerHTML = `<strong>${message.sender}</strong> [${timestamp}]: ${message.content}`;
+            const chatDiv = document.getElementById('chat');
+            if (chatDiv.classList.contains('loading')) {
+                chatDiv.classList.remove('loading');
+                chatDiv.innerHTML = '';
             }
 
-            messagesDiv.appendChild(messageElement);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const isOwn = message.sender === currentUser.fullName;
+            const div = document.createElement('div');
+            div.className = 'message ' + (isOwn ? 'own' : 'other');
+            
+            const timestamp = new Date(message.timestamp).toLocaleTimeString();
+            div.innerHTML = `
+                <div class="message-sender">${escapeHtml(message.sender)}</div>
+                <div class="message-content">${escapeHtml(message.content)}</div>
+                <div class="message-time">${timestamp}</div>
+            `;
+            
+            chatDiv.appendChild(div);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
         }
 
-        function logout() {
-            if (stompClient !== null) {
-                stompClient.disconnect();
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function loadHistory() {
+            fetch('/api/chat/history?groupId=' + groupId, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(messages => {
+                const chatDiv = document.getElementById('chat');
+                chatDiv.classList.remove('loading');
+                chatDiv.innerHTML = '';
+                messages.forEach(msg => showMessage(msg));
+            })
+            .catch(error => {
+                console.error('Error loading history:', error);
+                const chatDiv = document.getElementById('chat');
+                chatDiv.classList.remove('loading');
+                chatDiv.innerHTML = '<p class="loading">No messages yet. Start chatting!</p>';
+            });
+        }
+
+        function loadGroupInfo() {
+            fetch('/api/groups/' + groupId, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(group => {
+                document.getElementById('groupTitle').textContent = group.name;
+            })
+            .catch(error => console.error('Error loading group info:', error));
+        }
+
+        function loadCurrentUser() {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentUser = { fullName: payload.sub || 'User' };
+            } catch (e) {
+                currentUser = { fullName: 'User' };
             }
-            localStorage.removeItem('jwtToken');
-            jwtToken = null;
-            currentUser = null;
-            window.location.href = '/login.html';
+            loadGroupInfo();
+            connect();
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+        document.getElementById('message').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
-        }
+        });
 
-        // Check for stored token on page load
-        window.onload = function() {
-            const storedToken = localStorage.getItem('jwtToken');
-            if (storedToken) {
-                jwtToken = storedToken;
-                showChat();
-                connect();
-            } else {
-                // Redirect to login page if not authenticated
-                window.location.href = '/login.html';
-            }
-        };
+        loadCurrentUser();
     </script>
 </body>
 </html>

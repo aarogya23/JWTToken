@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            position: relative;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .create-group {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .create-group h2 {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .create-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .create-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .create-group button {
+            width: 100%;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .create-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .group-list h2 {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .group-list {
+            margin-top: 20px;
+        }
+
+        .group-item {
+            background: white;
+            border: 2px solid #e1e5e9;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-item:hover {
+            background-color: #f0f0f0;
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .group-item strong {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .group-item small {
+            color: #888;
+            font-size: 13px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <h1>Group Chat Management</h1>
+        <div class="create-group">
+            <h2>Create New Group</h2>
+            <input type="text" id="groupName" placeholder="Enter group name">
+            <button onclick="createGroup()">Create Group</button>
+        </div>
+        <div class="group-list">
+            <h2>Existing Groups</h2>
+            <div id="groups"></div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('jwtToken');
+
+        // Check for OAuth2 token in URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            localStorage.setItem('jwtToken', tokenFromUrl);
+            // Remove token from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const finalToken = localStorage.getItem('jwtToken');
+        if (!finalToken) {
+            window.location.href = '/login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = '/login.html';
+        }
+
+        function createGroup() {
+            const groupName = document.getElementById('groupName').value;
+            if (!groupName) {
+                alert('Please enter a group name');
+                return;
+            }
+
+            fetch('/api/groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')
+                },
+                body: JSON.stringify({ name: groupName })
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('groupName').value = '';
+                    loadGroups();
+                } else {
+                    alert('Failed to create group');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating group');
+            });
+        }
+
+        function loadGroups() {
+            fetch('/api/groups', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')
+                }
+            })
+            .then(response => response.json())
+            .then(groups => {
+                const groupsDiv = document.getElementById('groups');
+                groupsDiv.innerHTML = '';
+                if (groups.length === 0) {
+                    groupsDiv.innerHTML = '<p>No groups yet. Create one above!</p>';
+                } else {
+                    groups.forEach(group => {
+                        const div = document.createElement('div');
+                        div.className = 'group-item';
+                        div.innerHTML = `<strong>${group.name}</strong><small>Created by: ${group.createdBy.fullName}</small>`;
+                        div.onclick = () => joinGroup(group.id);
+                        groupsDiv.appendChild(div);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading groups:', error);
+                alert('Error loading groups');
+            });
+        }
+
+        function joinGroup(groupId) {
+            window.location.href = `/chat.html?groupId=${groupId}`;
+        }
+
+        // Load groups on page load
+        loadGroups();
+    </script>
+</body>
+</html>
