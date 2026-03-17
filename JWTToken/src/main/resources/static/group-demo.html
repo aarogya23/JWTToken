@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Display Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .group-list h2 {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .group-item {
+            background: white;
+            border: 2px solid #e1e5e9;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-item:hover {
+            background-color: #f0f0f0;
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .group-item strong {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .group-item small {
+            color: #888;
+            font-size: 13px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .demo-note {
+            background: #e8f4fd;
+            border: 1px solid #2196F3;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .demo-note h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .demo-note p {
+            color: #333;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Group Chat Management - Demo</h1>
+
+        <div class="demo-note">
+            <h3>🚀 Demo: How Groups Appear in groups.html</h3>
+            <p><strong>This shows what groups look like when loaded from the database.</strong></p>
+            <p>The real application fetches groups from <code>/api/groups</code> and displays them like this.</p>
+            <p>Each group shows: Group Name + Creator + Click to join chat</p>
+        </div>
+
+        <div class="group-list">
+            <h2>Existing Groups</h2>
+            <div id="groups">
+                <!-- Sample groups as they would appear -->
+                <div class="group-item" onclick="alert('Joining: Java Developers Group')">
+                    <strong>Java Developers Group</strong>
+                    <small>Created by: John Doe</small>
+                </div>
+
+                <div class="group-item" onclick="alert('Joining: React Study Group')">
+                    <strong>React Study Group</strong>
+                    <small>Created by: Jane Smith</small>
+                </div>
+
+                <div class="group-item" onclick="alert('Joining: Spring Boot Team')">
+                    <strong>Spring Boot Team</strong>
+                    <small>Created by: Test User</small>
+                </div>
+
+                <div class="group-item" onclick="alert('Joining: Database Experts')">
+                    <strong>Database Experts</strong>
+                    <small>Created by: Alice Johnson</small>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+            <h3>📋 How Groups Are Loaded:</h3>
+            <pre style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+// JavaScript in groups.html
+function loadGroups() {
+    fetch('/api/groups', {
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('jwtToken')
+        }
+    })
+    .then(response => response.json())
+    .then(groups => {
+        const groupsDiv = document.getElementById('groups');
+        groupsDiv.innerHTML = '';
+
+        if (groups.length === 0) {
+            groupsDiv.innerHTML = '&lt;p&gt;No groups yet. Create one above!&lt;/p&gt;';
+        } else {
+            groups.forEach(group => {
+                const div = document.createElement('div');
+                div.className = 'group-item';
+                div.innerHTML = `&lt;strong&gt;${group.name}&lt;/strong&gt;&lt;small&gt;Created by: ${group.createdBy.fullName}&lt;/small&gt;`;
+                div.onclick = () => joinGroup(group.id);
+                groupsDiv.appendChild(div);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading groups:', error);
+        alert('Error loading groups');
+    });
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        // Demo interaction
+        document.querySelectorAll('.group-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const groupName = this.querySelector('strong').textContent;
+                alert(`🎉 Joining: ${groupName}\n\nIn real app: Redirects to /chat.html?groupId=<id>`);
+            });
+        });
+    </script>
+</body>
+</html>
