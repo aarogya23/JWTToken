@@ -49,7 +49,7 @@ public class SecurityConfig {
 
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/auth/**", "/oauth2/**", "/login/**", "/ws/**", "/h2-console/**", "/index.html", "/login.html", "/chat.html", "/groups.html", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
+                .requestMatchers("/", "/auth/**", "/oauth2/**", "/login/**", "/ws/**", "/h2-console/**", "/index.html", "/login.html", "/chat.html", "/groups.html", "/stories.html", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
 
