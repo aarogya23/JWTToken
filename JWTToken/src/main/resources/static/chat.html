@@ -66,6 +66,16 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        .stories-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: rgba(255, 193, 7, 0.2);
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
         #chat {
             flex: 1;
             overflow-y: auto;
@@ -224,6 +234,7 @@
         <div class="chat-header">
             <h1 id="groupTitle">Loading...</h1>
             <div class="chat-header-buttons">
+                <button onclick="goToStories()" title="View and post stories">📸 Stories</button>
                 <button onclick="goBack()">Back to Groups</button>
                 <button onclick="logout()">Logout</button>
             </div>
@@ -254,6 +265,10 @@
 
         function goBack() {
             window.location.href = '/groups.html';
+        }
+
+        function goToStories() {
+            window.location.href = '/stories.html';
         }
 
         function logout() {

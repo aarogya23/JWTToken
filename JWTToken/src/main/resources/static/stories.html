@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories - Share Moments With Everyone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .navbar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .navbar-buttons button {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-buttons button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            margin-top: 80px;
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .upload-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .file-preview img,
+        .file-preview video,
+        .file-preview audio {
+            width: 100%;
+            display: block;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #45a049;
+        }
+
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stories-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .story-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .story-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .story-media {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .story-media img,
+        .story-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .story-info {
+            padding: 12px;
+            background: white;
+        }
+
+        .story-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .story-user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .story-user-details {
+            flex: 1;
+        }
+
+        .story-user-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .story-user-email {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .story-caption {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .story-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .story-delete-btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .story-delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .stories-grid {
+            grid-column: 1 / -1;
+        }
+
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .no-stories {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .expiration-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #ff9800;
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .error {
+            color: #f44336;
+            font-size: 13px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+
+        .success {
+            color: #4CAF50;
+            font-size: 13px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-section {
+                position: static;
+            }
+
+            .stories-container {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>📸 Stories</h1>
+        <div class="navbar-buttons">
+            <button onclick="goToChat()">Back to Chat</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Share Your Story</h2>
+            
+            <div class="form-group">
+                <label for="fileInput">Select Media (max 15MB)</label>
+                <label for="fileInput" class="file-input-label">
+                    📁 Choose File (Image, Video, Audio)
+                </label>
+                <input type="file" id="fileInput" onchange="handleMediaSelect(event)" accept="image/*,video/*,audio/*">
+                <div class="error" id="fileError" style="display: none;"></div>
+            </div>
+
+            <div class="file-preview" id="filePreview" style="display: none;"></div>
+
+            <div class="form-group">
+                <label for="caption">Caption (Optional)</label>
+                <textarea id="caption" placeholder="Add a caption to your story..."></textarea>
+            </div>
+
+            <div class="loading-spinner" id="uploadSpinner">Uploading story...</div>
+            <button class="upload-btn" id="uploadBtn" onclick="uploadStory()">Upload Story</button>
+            <div class="error" id="uploadError" style="display: none;"></div>
+            <div class="success" id="uploadSuccess" style="display: none;"></div>
+        </div>
+
+        <!-- Stories Feed -->
+        <div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('all')">All Stories</button>
+                <button class="tab-btn" onclick="switchTab('my')">My Stories</button>
+            </div>
+
+            <div id="storiesFeed" class="stories-container loading">
+                Loading stories...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('jwtToken');
+        let currentUser = null;
+        let currentUserId = null;
+        let selectedFile = null;
+        let currentTab = 'all';
+
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        function goToChat() {
+            window.location.href = '/groups.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = '/login.html';
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadStories();
+        }
+
+        function handleMediaSelect(event) {
+            const file = event.target.files[0];
+            const fileError = document.getElementById('fileError');
+            const filePreview = document.getElementById('filePreview');
+
+            fileError.style.display = 'none';
+            fileError.textContent = '';
+
+            if (!file) {
+                filePreview.style.display = 'none';
+                selectedFile = null;
+                return;
+            }
+
+            // Validate file size (15MB)
+            if (file.size > 15 * 1024 * 1024) {
+                fileError.textContent = 'File size exceeds 15MB limit';
+                fileError.style.display = 'block';
+                filePreview.style.display = 'none';
+                selectedFile = null;
+                return;
+            }
+
+            // Validate file type
+            const validTypes = ['image/', 'video/', 'audio/'];
+            if (!validTypes.some(type => file.type.startsWith(type))) {
+                fileError.textContent = 'Invalid file type. Please upload an image, video, or audio file.';
+                fileError.style.display = 'block';
+                filePreview.style.display = 'none';
+                selectedFile = null;
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                filePreview.innerHTML = '';
+                if (file.type.startsWith('image/')) {
+                    filePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                } else if (file.type.startsWith('video/')) {
+                    filePreview.innerHTML = `<video controls><source src="${e.target.result}" type="${file.type}">Your browser does not support the video tag.</video>`;
+                } else if (file.type.startsWith('audio/')) {
+                    filePreview.innerHTML = `<audio controls><source src="${e.target.result}" type="${file.type}">Your browser does not support the audio tag.</audio>`;
+                }
+                filePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadStory() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadError = document.getElementById('uploadError');
+            const uploadSuccess = document.getElementById('uploadSuccess');
+            const caption = document.getElementById('caption').value.trim();
+
+            uploadError.style.display = 'none';
+            uploadSuccess.style.display = 'none';
+
+            if (!selectedFile) {
+                uploadError.textContent = 'Please select a file to upload';
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadSpinner.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            if (caption) {
+                formData.append('caption', caption);
+            }
+
+            fetch('/api/stories/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                uploadSpinner.style.display = 'none';
+                uploadBtn.disabled = false;
+
+                if (data.error || data.message === 'User not found') {
+                    uploadError.textContent = data.error || 'Failed to upload story';
+                    uploadError.style.display = 'block';
+                } else {
+                    uploadSuccess.textContent = 'Story uploaded successfully!';
+                    uploadSuccess.style.display = 'block';
+                    
+                    // Reset form
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('caption').value = '';
+                    selectedFile = null;
+                    document.getElementById('filePreview').style.display = 'none';
+                    
+                    // Reload stories
+                    setTimeout(() => {
+                        uploadSuccess.style.display = 'none';
+                        loadStories();
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading story:', error);
+                uploadSpinner.style.display = 'none';
+                uploadBtn.disabled = false;
+                uploadError.textContent = 'Failed to upload story. Please try again.';
+                uploadError.style.display = 'block';
+            });
+        }
+
+        function loadStories() {
+            const storiesFeed = document.getElementById('storiesFeed');
+            storiesFeed.className = 'stories-container loading';
+            storiesFeed.innerHTML = 'Loading stories...';
+
+            const endpoint = currentTab === 'all' 
+                ? '/api/stories/all' 
+                : `/api/stories/user/${currentUserId}`;
+
+            fetch(endpoint, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(stories => {
+                storiesFeed.className = 'stories-container';
+                storiesFeed.innerHTML = '';
+
+                if (!stories || stories.length === 0) {
+                    storiesFeed.innerHTML = '<div class="no-stories">No stories yet. Be the first to share!</div>';
+                    return;
+                }
+
+                stories.forEach(story => {
+                    const storyCard = createStoryCard(story);
+                    storiesFeed.appendChild(storyCard);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading stories:', error);
+                storiesFeed.className = 'stories-container';
+                storiesFeed.innerHTML = '<div class="no-stories">Failed to load stories. Please try again.</div>';
+            });
+        }
+
+        function createStoryCard(story) {
+            const card = document.createElement('div');
+            card.className = 'story-card';
+
+            const mediaHtml = story.mediaType.startsWith('image/')
+                ? `<img src="data:${story.mediaType};base64,${story.mediaUrl}" alt="Story">`
+                : story.mediaType.startsWith('video/')
+                ? `<video controls><source src="data:${story.mediaType};base64,${story.mediaUrl}" type="${story.mediaType}">Your browser does not support the video tag.</video>`
+                : story.mediaType.startsWith('audio/')
+                ? `<audio controls><source src="data:${story.mediaType};base64,${story.mediaUrl}" type="${story.mediaType}">Your browser does not support the audio tag.</audio>`
+                : `<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0;">Unsupported media type</div>`;
+
+            const timeAgo = getTimeAgo(new Date(story.createdAt));
+            const isOwnStory = story.userId === getCurrentUserId();
+            const userInitial = story.userFullName ? story.userFullName.charAt(0).toUpperCase() : 'U';
+
+            card.innerHTML = `
+                <div class="story-media">
+                    ${mediaHtml}
+                </div>
+                <div class="story-info">
+                    <div class="story-user">
+                        <div class="story-user-avatar">${userInitial}</div>
+                        <div class="story-user-details">
+                            <div class="story-user-name">${escapeHtml(story.userFullName || 'Anonymous')}</div>
+                            <div class="story-user-email">${escapeHtml(story.userEmail || '')}</div>
+                        </div>
+                    </div>
+                    ${story.caption ? `<div class="story-caption">${escapeHtml(story.caption)}</div>` : ''}
+                    <div class="story-time">${timeAgo}</div>
+                    ${isOwnStory ? `
+                        <button class="story-delete-btn" onclick="deleteStory(${story.id}, event)">🗑️ Delete</button>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function deleteStory(storyId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('Are you sure you want to delete this story?')) {
+                return;
+            }
+
+            fetch(`/api/stories/${storyId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadStories();
+            })
+            .catch(error => {
+                console.error('Error deleting story:', error);
+                alert('Failed to delete story');
+            });
+        }
+
+        function getCurrentUserId() {
+            return currentUserId;
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function loadCurrentUser() {
+            fetch('/api/profile', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(user => {
+                currentUser = user;
+                currentUserId = user.id;
+                loadStories();
+            })
+            .catch(error => {
+                console.error('Error loading current user:', error);
+                loadStories();
+            });
+        }
+
+        // Initialize on page load
+        loadCurrentUser();
+    </script>
+</body>
+</html>

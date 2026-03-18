@@ -110,6 +110,7 @@ public class ChatController {
     /**
      * Upload file and return Base64 encoded file data
      * POST /api/chat/upload
+     * Supports up to 15MB files
      */
     @PostMapping("/api/chat/upload")
     public ResponseEntity<Map<String, Object>> uploadFile(
@@ -121,11 +122,11 @@ public class ChatController {
                     .body(Map.of("error", "File is empty"));
             }
 
-            // Check file size (max 10MB)
-            long maxFileSize = 10 * 1024 * 1024; // 10MB
+            // Check file size (max 15MB)
+            long maxFileSize = 15 * 1024 * 1024; // 15MB
             if (file.getSize() > maxFileSize) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "File size exceeds 10MB limit"));
+                    .body(Map.of("error", "File size exceeds 15MB limit"));
             }
 
             // Convert file to Base64
@@ -144,6 +145,66 @@ public class ChatController {
             System.err.println("Error uploading file: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to upload file"));
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Server error"));
+        }
+    }
+
+    /**
+     * Send a message with file attachment
+     * POST /api/chat/sendWithAttachment
+     */
+    @PostMapping("/api/chat/sendWithAttachment")
+    public ResponseEntity<Map<String, Object>> sendMessageWithAttachment(
+            @RequestParam("groupId") Long groupId,
+            @RequestParam("sender") String sender,
+            @RequestParam("content") String content,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            ChatMessage message = new ChatMessage();
+            message.setRoom(groupId);
+            message.setSender(sender);
+            message.setContent(content);
+            message.setType(ChatMessage.MessageType.CHAT);
+            message.setTimestamp(LocalDateTime.now());
+
+            // Handle file attachment if present
+            if (file != null && !file.isEmpty()) {
+                // Check file size (max 15MB)
+                long maxFileSize = 15 * 1024 * 1024; // 15MB
+                if (file.getSize() > maxFileSize) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "File size exceeds 15MB limit"));
+                }
+
+                // Convert file to Base64
+                byte[] fileBytes = file.getBytes();
+                String base64File = Base64.getEncoder().encodeToString(fileBytes);
+
+                message.setFileUrl(base64File);
+                message.setFileName(file.getOriginalFilename());
+                message.setFileType(file.getContentType());
+                message.setFileSize(file.getSize());
+            }
+
+            // Save message
+            ChatMessage savedMessage = chatMessageService.saveMessage(message, sender, groupId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", savedMessage);
+            response.put("fileUrl", savedMessage.getFileUrl() != null ? 
+                "data:" + savedMessage.getFileType() + ";base64," + savedMessage.getFileUrl() : null);
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            System.err.println("Error sending message with attachment: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to send message with attachment"));
         } catch (Exception e) {
             System.err.println("Unexpected error: " + e.getMessage());
             e.printStackTrace();
