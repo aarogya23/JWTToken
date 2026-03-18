@@ -66,4 +66,13 @@ public class AuthenticationService implements UserDetailsService {
         return userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElse(null);
+    }
+
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
 }

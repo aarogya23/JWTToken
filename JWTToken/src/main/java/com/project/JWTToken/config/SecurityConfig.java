@@ -1,6 +1,7 @@
 package com.project.JWTToken.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +29,9 @@ public class SecurityConfig {
     private final AuthenticationService authenticationService;
     private final JwtService jwtService;
 
+    @Value("${spring.security.oauth2.client.registration.google.client-id:#{null}}")
+    private String googleClientId;
+
     @Bean
     public OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
         return new OAuth2AuthenticationSuccessHandler(authenticationService, jwtService);
@@ -45,18 +49,23 @@ public class SecurityConfig {
 
             // Authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/auth/**", "/oauth2/**", "/login/**", "/ws/**", "/index.html", "/login.html", "/chat.html", "/groups.html", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
+                .requestMatchers("/", "/auth/**", "/oauth2/**", "/login/**", "/ws/**", "/h2-console/**", "/index.html", "/login.html", "/chat.html", "/groups.html", "/css/**", "/js/**", "/images/**", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
 
-            // OAuth2 Login
-            .oauth2Login(oauth2 -> oauth2
+            // Allow frames for H2 console
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+
+        // Conditionally configure OAuth2 Login if Google client-id is set
+        if (googleClientId != null && !googleClientId.isEmpty()) {
+            http.oauth2Login(oauth2 -> oauth2
                 .loginPage("/oauth2/authorization/google")
                 .successHandler(oauth2AuthenticationSuccessHandler())
-            )
+            );
+        }
 
-            // Add JWT filter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // Add JWT filter
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

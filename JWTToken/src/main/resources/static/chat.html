@@ -200,6 +200,9 @@
         }
 
         function connect() {
+            // Load history immediately so the user sees older messages even if WebSocket connection takes time.
+            loadHistory();
+
             const socket = new SockJS('/ws?token=' + token);
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function(frame) {
@@ -207,7 +210,6 @@
                 stompClient.subscribe('/topic/group/' + groupId, function(message) {
                     showMessage(JSON.parse(message.body));
                 });
-                loadHistory();
             }, function(error) {
                 console.error('Connection error:', error);
                 setTimeout(connect, 5000);

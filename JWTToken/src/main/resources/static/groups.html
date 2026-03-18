@@ -134,12 +134,262 @@
         .logout-btn:hover {
             background: #c82333;
         }
+
+        .profile-btn {
+            position: absolute;
+            top: 20px;
+            right: 140px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .profile-btn:hover {
+            background: #764ba2;
+        }
+
+        /* Profile Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #000;
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 15px;
+            object-fit: cover;
+            border: 4px solid #667eea;
+        }
+
+        .profile-avatar.image {
+            background: white;
+        }
+
+        .upload-picture {
+            margin: 10px 0;
+        }
+
+        .upload-picture input[type="file"] {
+            display: none;
+        }
+
+        .upload-picture label {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .upload-picture label:hover {
+            background: #764ba2;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-group input:disabled {
+            background-color: #f5f5f5;
+            color: #888;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-profile-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .save-profile-btn:hover {
+            background: #218838;
+        }
+
+        .cancel-profile-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .cancel-profile-btn:hover {
+            background: #5a6268;
+        }
+
+        .success-msg {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-msg.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
         <button class="logout-btn" onclick="logout()">Logout</button>
         <h1>Group Chat Management</h1>
+
+        <!-- Profile Modal -->
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>👤 My Profile</h2>
+                    <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+                </div>
+
+                <div class="success-msg" id="successMsg">Profile updated successfully!</div>
+
+                <div class="profile-section">
+                    <div id="profileAvatar" class="profile-avatar">👤</div>
+                    <div class="upload-picture">
+                        <input type="file" id="profileImage" accept="image/*" onchange="previewImage(event)">
+                        <label for="profileImage">📷 Upload Profile Picture</label>
+                        <p style="font-size: 12px; color: #888; margin-top: 5px;">PNG, JPG up to 10MB</p>
+                    </div>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter your email" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <input type="text" id="bio" placeholder="Tell us about yourself (optional)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" placeholder="Your location (optional)">
+                    </div>
+
+                    <div class="modal-buttons">
+                        <button type="button" class="save-profile-btn" onclick="saveProfile()">✓ Save Changes</button>
+                        <button type="button" class="cancel-profile-btn" onclick="closeProfileModal()">✕ Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="create-group">
             <h2>Create New Group</h2>
             <input type="text" id="groupName" placeholder="Enter group name">
@@ -169,8 +419,187 @@
             localStorage.setItem('jwtToken', 'dummy-token-for-testing');
         }
 
+        let profileData = {
+            id: null,
+            fullName: '',
+            email: '',
+            bio: '',
+            location: '',
+            profileImage: null
+        };
+
+        // Load user profile from backend API
+        function loadUserProfile() {
+            const token = localStorage.getItem('jwtToken');
+            fetch('/api/profile', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if (response.status === 401) {
+                    console.warn('Unauthorized, using local storage');
+                    loadLocalProfile();
+                    return;
+                }
+                throw new Error('Failed to fetch profile');
+            })
+            .then(user => {
+                if (user) {
+                    profileData.id = user.id;
+                    profileData.fullName = user.fullName || '';
+                    profileData.email = user.email || '';
+                    profileData.bio = user.bio || '';
+                    profileData.location = user.location || '';
+                    profileData.profileImage = user.profileImage || null;
+
+                    document.getElementById('fullName').value = profileData.fullName;
+                    document.getElementById('email').value = profileData.email;
+                    document.getElementById('bio').value = profileData.bio;
+                    document.getElementById('location').value = profileData.location;
+
+                    // Update avatar with initials
+                    updateAvatar();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading profile:', error);
+                loadLocalProfile();
+            });
+        }
+
+        function loadLocalProfile() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            profileData.fullName = userInfo.fullName || '';
+            profileData.email = userInfo.email || '';
+            profileData.bio = userInfo.bio || '';
+            profileData.location = userInfo.location || '';
+
+            document.getElementById('fullName').value = profileData.fullName;
+            document.getElementById('email').value = profileData.email;
+            document.getElementById('bio').value = profileData.bio;
+            document.getElementById('location').value = profileData.location;
+
+            updateAvatar();
+        }
+
+        function updateAvatar() {
+            const initials = profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase() || '👤';
+            const avatar = document.getElementById('profileAvatar');
+            
+            if (profileData.profileImage) {
+                avatar.style.backgroundImage = `url(${profileData.profileImage})`;
+                avatar.textContent = '';
+                avatar.classList.add('image');
+            } else {
+                avatar.style.backgroundImage = 'none';
+                avatar.textContent = initials;
+                avatar.classList.remove('image');
+            }
+        }
+
+        function openProfileModal() {
+            loadUserProfile();
+            document.getElementById('profileModal').classList.add('show');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('show');
+            document.getElementById('successMsg').classList.remove('show');
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatar = document.getElementById('profileAvatar');
+                    avatar.style.backgroundImage = `url(${e.target.result})`;
+                    avatar.textContent = '';
+                    avatar.classList.add('image');
+                    profileData.profileImage = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveProfile() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const bio = document.getElementById('bio').value.trim();
+            const location = document.getElementById('location').value.trim();
+
+            if (!fullName) {
+                alert('Please enter your full name');
+                return;
+            }
+
+            const token = localStorage.getItem('jwtToken');
+            const updatePayload = {
+                fullName: fullName,
+                bio: bio,
+                location: location,
+                profileImage: profileData.profileImage
+            };
+
+            fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(updatePayload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if (response.status === 401) {
+                    // Save locally if unauthorized
+                    profileData.fullName = fullName;
+                    profileData.bio = bio;
+                    profileData.location = location;
+                    localStorage.setItem('userInfo', JSON.stringify(profileData));
+                    showSuccess();
+                    return;
+                }
+                throw new Error('Failed to update profile');
+            })
+            .then(user => {
+                if (user) {
+                    profileData.fullName = user.fullName;
+                    profileData.bio = user.bio;
+                    profileData.location = user.location;
+                    profileData.profileImage = user.profileImage;
+                    localStorage.setItem('userInfo', JSON.stringify(profileData));
+                    showSuccess();
+                }
+            })
+            .catch(error => {
+                console.error('Error updating profile:', error);
+                alert('Error updating profile. Please try again.');
+            });
+        }
+
+        function showSuccess() {
+            const successMsg = document.getElementById('successMsg');
+            successMsg.classList.add('show');
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('profileModal');
+            if (event.target === modal) {
+                closeProfileModal();
+            }
+        }
+
         function logout() {
             localStorage.removeItem('jwtToken');
+            localStorage.removeItem('userInfo');
             window.location.href = '/login.html';
         }
 
@@ -238,8 +667,9 @@
             window.location.href = `/chat.html?groupId=${groupId}`;
         }
 
-        // Load groups on page load
+        // Load groups and user profile on page load
         loadGroups();
+        loadUserProfile();
     </script>
 </body>
 </html>

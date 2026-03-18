@@ -26,9 +26,9 @@ public class ChatMessage {
 
     private String sender;
 
-    @Column(nullable = false)
-    private Long groupId;  // Changed from room to groupId
-
+    // persisted as `group_id` in chat_messages (this column is NOT NULL in the current schema)
+    @Column(name = "group_id", nullable = false)
+    private Long room;
     private LocalDateTime timestamp;
 
     public enum MessageType {

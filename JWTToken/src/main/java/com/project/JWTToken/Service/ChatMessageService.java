@@ -16,7 +16,8 @@ public class ChatMessageService {
     public ChatMessage saveMessage(ChatMessage chatMessage, String email, Long groupId) {
         chatMessage.setSender(email != null ? email : "Anonymous");
         chatMessage.setTimestamp(java.time.LocalDateTime.now());
-        chatMessage.setGroupId(groupId != null ? groupId : 1L); // Default to group 1 or handle appropriately
+        // Map the passed groupId into the DB column 'room'
+        chatMessage.setRoom(groupId != null ? groupId : 1L); // Default to group 1 or handle appropriately
         return chatMessageRepository.save(chatMessage);
     }
 
@@ -25,6 +26,6 @@ public class ChatMessageService {
     }
 
     public List<ChatMessage> getMessagesForGroup(Long groupId) {
-        return chatMessageRepository.findByGroupIdOrderByTimestampAsc(groupId);
+        return chatMessageRepository.findByRoomOrderByTimestampAsc(groupId);
     }
 }

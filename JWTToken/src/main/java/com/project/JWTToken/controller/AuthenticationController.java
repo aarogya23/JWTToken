@@ -5,9 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.project.JWTToken.Service.AuthenticationService;
 import com.project.JWTToken.Service.JwtService;
@@ -88,4 +91,5 @@ public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto dto)
                 .body(errorResponse);
     }
 }
+
 }

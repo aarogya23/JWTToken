@@ -39,6 +39,13 @@ public class User implements UserDetails {
 
     private String oauthProvider;
 
+    private String bio;
+
+    private String location;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String profileImage;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
