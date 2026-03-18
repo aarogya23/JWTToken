@@ -31,6 +31,16 @@ public class ChatMessage {
     private Long room;
     private LocalDateTime timestamp;
 
+    // File/Media related fields
+    @Column(columnDefinition = "LONGTEXT")
+    private String fileUrl;           // Base64 encoded file or URL
+    
+    private String fileName;          // Original file name
+    
+    private String fileType;          // MIME type (image/png, video/mp4, etc.)
+    
+    private Long fileSize;            // File size in bytes
+
     public enum MessageType {
         CHAT, JOIN, LEAVE
     }

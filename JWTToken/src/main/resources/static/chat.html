@@ -161,6 +161,62 @@
             color: #999;
             padding: 20px;
         }
+
+        .file-upload-container {
+            position: relative;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-upload-btn {
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-btn:hover {
+            background: #45a049;
+        }
+
+        .message-file {
+            margin-top: 10px;
+            max-width: 300px;
+        }
+
+        .message-file img,
+        .message-file video {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+
+        .file-download {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #2196F3;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .file-download:hover {
+            background: #0b7dda;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -174,7 +230,12 @@
         </div>
         <div id="chat" class="loading">Loading messages...</div>
         <div class="chat-input-container">
+            <div class="file-upload-container">
+                <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.zip">
+                <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()" title="Upload file (images, videos, documents, etc.)">📎</button>
+            </div>
             <input id="message" type="text" placeholder="Type a message and press Enter...">
+            <div class="loading-spinner" id="uploadSpinner">Uploading...</div>
             <button class="send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
@@ -185,6 +246,7 @@
         const token = localStorage.getItem('jwtToken');
         let currentUser = null;
         let stompClient = null;
+        let uploadedFileData = null;  // Store uploaded file data
 
         if (!groupId || !token) {
             window.location.href = '/groups.html';
@@ -219,7 +281,7 @@
         function sendMessage() {
             const messageInput = document.getElementById('message');
             const messageContent = messageInput.value.trim();
-            if (!messageContent || !stompClient) return;
+            if ((!messageContent && !uploadedFileData) || !stompClient) return;
 
             const message = {
                 content: messageContent,
@@ -228,9 +290,53 @@
                 timestamp: new Date().toISOString()
             };
 
+            // Add file data if available
+            if (uploadedFileData) {
+                message.fileUrl = uploadedFileData.fileUrl;
+                message.fileName = uploadedFileData.fileName;
+                message.fileType = uploadedFileData.fileType;
+                message.fileSize = uploadedFileData.fileSize;
+                uploadedFileData = null;  // Reset after sending
+                document.getElementById('fileInput').value = '';  // Clear file input
+            }
+
             stompClient.send('/app/chat.sendMessage/' + groupId, {}, JSON.stringify(message));
             messageInput.value = '';
             messageInput.focus();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const spinner = document.getElementById('uploadSpinner');
+            spinner.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/api/chat/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    uploadedFileData = data;
+                    alert('File uploaded: ' + data.fileName + '. Now add a message and click Send!');
+                }
+                spinner.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                alert('Failed to upload file');
+                spinner.style.display = 'none';
+            });
         }
 
         function showMessage(message) {
@@ -245,11 +351,27 @@
             div.className = 'message ' + (isOwn ? 'own' : 'other');
             
             const timestamp = new Date(message.timestamp).toLocaleTimeString();
-            div.innerHTML = `
+            let contentHtml = `
                 <div class="message-sender">${escapeHtml(message.sender)}</div>
                 <div class="message-content">${escapeHtml(message.content)}</div>
-                <div class="message-time">${timestamp}</div>
             `;
+
+            // Display file if present
+            if (message.fileUrl) {
+                const fileType = message.fileType || '';
+                if (fileType.startsWith('image/')) {
+                    contentHtml += `<div class="message-file"><img src="${message.fileUrl}" alt="${escapeHtml(message.fileName)}"></div>`;
+                } else if (fileType.startsWith('video/')) {
+                    contentHtml += `<div class="message-file"><video controls width="300"><source src="${message.fileUrl}" type="${fileType}">Your browser does not support the video tag.</video></div>`;
+                } else if (fileType.startsWith('audio/')) {
+                    contentHtml += `<div class="message-file"><audio controls><source src="${message.fileUrl}" type="${fileType}">Your browser does not support the audio tag.</audio></div>`;
+                } else {
+                    contentHtml += `<a class="file-download" href="${message.fileUrl}" download="${message.fileName}">📥 ${escapeHtml(message.fileName)}</a>`;
+                }
+            }
+
+            contentHtml += `<div class="message-time">${timestamp}</div>`;
+            div.innerHTML = contentHtml;
             
             chatDiv.appendChild(div);
             chatDiv.scrollTop = chatDiv.scrollHeight;
