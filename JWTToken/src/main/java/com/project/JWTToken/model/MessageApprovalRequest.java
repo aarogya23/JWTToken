@@ -10,24 +10,31 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "group_membership_requests")
+@Table(name = "message_approval_requests")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupMembershipRequest {
+public class MessageApprovalRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
+    @JoinColumn(name = "group_id")
     @JsonIgnore
     private Group group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_id")
+    private User recipient; // For direct messages to admin
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String messageContent;
 
     @Column(nullable = false)
     @Builder.Default
@@ -45,4 +52,7 @@ public class GroupMembershipRequest {
 
     @Column
     private String rejectionReason;
+
+    @Column
+    private String messageType; // "GROUP" or "DIRECT"
 }

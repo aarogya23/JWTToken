@@ -17,15 +17,20 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupMembershipRequestRepository groupMembershipRequestRepository;
+    private final com.project.JWTToken.repository.UserRepository userRepository;
 
     public Group createGroup(String name, User createdBy) {
+        return createGroup(name, createdBy, null);
+    }
+
+    public Group createGroup(String name, User createdBy, List<Integer> initialMemberIds) {
         Group group = Group.builder()
                 .name(name)
                 .createdBy(createdBy)
                 .createdAt(LocalDateTime.now())
                 .build();
         Group savedGroup = groupRepository.save(group);
-        
+
         // Add the creator as an approved member automatically
         GroupMember adminMember = GroupMember.builder()
                 .group(savedGroup)
@@ -36,7 +41,34 @@ public class GroupService {
                 .approvedAt(LocalDateTime.now())
                 .build();
         groupMemberRepository.save(adminMember);
-        
+
+        if (initialMemberIds != null) {
+            for (Integer memberId : initialMemberIds) {
+                if (memberId == null || memberId.equals(createdBy.getId())) {
+                    continue;
+                }
+
+                var userOptional = userRepository.findById(memberId);
+                if (userOptional.isEmpty()) continue;
+
+                User user = userOptional.get();
+
+                if (groupMemberRepository.findByGroupAndUser(savedGroup, user).isPresent()) {
+                    continue;
+                }
+
+                GroupMember member = GroupMember.builder()
+                        .group(savedGroup)
+                        .user(user)
+                        .joinedAt(LocalDateTime.now())
+                        .approved(true)
+                        .approvedBy(createdBy)
+                        .approvedAt(LocalDateTime.now())
+                        .build();
+                groupMemberRepository.save(member);
+            }
+        }
+
         return savedGroup;
     }
 
@@ -48,90 +80,26 @@ public class GroupService {
         return groupRepository.findById(id).orElseThrow(() -> new RuntimeException("Group not found"));
     }
 
-    // Request to join a group
-    public GroupMembershipRequest requestToJoinGroup(Group group, User user) {
-        // Check if user already has a pending request
-        var existingRequest = groupMembershipRequestRepository.findByGroupIdAndUserId(group.getId(), user.getId());
-        if (existingRequest.isPresent()) {
-            throw new RuntimeException("You already have a pending request for this group");
-        }
-
-        // Check if user is already a member
-        var existingMember = groupMemberRepository.findByGroupAndUser(group, user);
-        if (existingMember.isPresent()) {
-            throw new RuntimeException("You are already a member of this group");
-        }
-
-        GroupMembershipRequest request = GroupMembershipRequest.builder()
-                .group(group)
-                .user(user)
-                .status("PENDING")
-                .requestedAt(LocalDateTime.now())
-                .build();
-        return groupMembershipRequestRepository.save(request);
-    }
-
-    // Get pending requests for a group (for admin)
-    public List<GroupMembershipRequest> getPendingRequestsForGroup(Long groupId) {
-        return groupMembershipRequestRepository.findByGroupIdAndStatus(groupId, "PENDING");
-    }
-
-    // Approve membership request
-    public GroupMembershipRequest approveMembershipRequest(Long requestId, User adminUser) {
-        GroupMembershipRequest request = groupMembershipRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
-
-        // Verify the user approving is the admin of the group
-        if (!request.getGroup().getCreatedBy().getId().equals(adminUser.getId())) {
-            throw new RuntimeException("Only the group admin can approve requests");
-        }
-
-        if (!request.getStatus().equals("PENDING")) {
-            throw new RuntimeException("Request is not pending");
-        }
-
-        // Create approved member
-        GroupMember member = GroupMember.builder()
-                .group(request.getGroup())
-                .user(request.getUser())
-                .joinedAt(LocalDateTime.now())
-                .approved(true)
-                .approvedBy(adminUser)
-                .approvedAt(LocalDateTime.now())
-                .build();
-        groupMemberRepository.save(member);
-
-        // Update request status
-        request.setStatus("APPROVED");
-        request.setReviewedBy(adminUser);
-        request.setReviewedAt(LocalDateTime.now());
-        return groupMembershipRequestRepository.save(request);
-    }
-
-    // Reject membership request
-    public GroupMembershipRequest rejectMembershipRequest(Long requestId, User adminUser, String reason) {
-        GroupMembershipRequest request = groupMembershipRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
-
-        // Verify the user rejecting is the admin of the group
-        if (!request.getGroup().getCreatedBy().getId().equals(adminUser.getId())) {
-            throw new RuntimeException("Only the group admin can reject requests");
-        }
-
-        if (!request.getStatus().equals("PENDING")) {
-            throw new RuntimeException("Request is not pending");
-        }
-
-        request.setStatus("REJECTED");
-        request.setReviewedBy(adminUser);
-        request.setReviewedAt(LocalDateTime.now());
-        request.setRejectionReason(reason);
-        return groupMembershipRequestRepository.save(request);
-    }
-
-    // Get all members of a group (approved only)
+    // Get all approved members of a group
     public List<GroupMember> getGroupMembers(Long groupId) {
         return groupMemberRepository.findByGroupIdAndApprovedTrue(groupId);
+    }
+
+    public boolean isGroupAdmin(Long groupId, String email) {
+        var group = groupRepository.findById(groupId);
+        if (group.isEmpty()) return false;
+        var user = userRepository.findByEmail(email);
+        return user.isPresent() && group.get().getCreatedBy().getId().equals(user.get().getId());
+    }
+
+    public boolean isApprovedMember(Long groupId, String email) {
+        var group = groupRepository.findById(groupId);
+        if (group.isEmpty()) return false;
+        var user = userRepository.findByEmail(email);
+        if (user.isEmpty()) return false;
+        return groupMemberRepository.findByGroupAndUser(group.get(), user.get())
+                .map(GroupMember::isApproved)
+                .orElse(false);
     }
 
     // Remove a member from group
@@ -143,8 +111,11 @@ public class GroupService {
             throw new RuntimeException("Only the group admin can remove members");
         }
 
-        GroupMember member = groupMemberRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
+        User userToRemove = new User();
+        userToRemove.setId(userId);
+        
+        GroupMember member = groupMemberRepository.findByGroupAndUser(group, userToRemove)
+                .orElseThrow(() -> new RuntimeException("Member not found in this group"));
 
         groupMemberRepository.delete(member);
     }
