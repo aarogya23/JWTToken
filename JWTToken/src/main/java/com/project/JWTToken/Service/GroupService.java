@@ -119,4 +119,56 @@ public class GroupService {
 
         groupMemberRepository.delete(member);
     }
+
+    // Add a member to existing group (admin only)
+    public void addMemberToGroup(Long groupId, Integer userId, User adminUser) {
+        Group group = getGroupById(groupId);
+
+        // Verify admin permission
+        if (!group.getCreatedBy().getId().equals(adminUser.getId())) {
+            throw new RuntimeException("Only the group admin can add members");
+        }
+
+        // Find the user to add
+        User userToAdd = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Check if user is already a member
+        if (groupMemberRepository.findByGroupAndUser(group, userToAdd).isPresent()) {
+            throw new RuntimeException("User is already a member of this group");
+        }
+
+        // Add user as approved member (since admin is adding them)
+        GroupMember newMember = GroupMember.builder()
+                .group(group)
+                .user(userToAdd)
+                .joinedAt(LocalDateTime.now())
+                .approved(true)
+                .approvedBy(adminUser)
+                .approvedAt(LocalDateTime.now())
+                .build();
+        groupMemberRepository.save(newMember);
+    }
+
+    // Get available members for a specific group (users not yet in the group)
+    public List<User> getAvailableMembersForGroup(Long groupId) {
+        Group group = getGroupById(groupId);
+        List<GroupMember> currentMembers = groupMemberRepository.findByGroupId(groupId);
+        List<Integer> currentMemberIds = new java.util.ArrayList<>();
+        
+        for (GroupMember member : currentMembers) {
+            currentMemberIds.add(member.getUser().getId());
+        }
+
+        List<User> allUsers = (List<User>) userRepository.findAll();
+        List<User> availableUsers = new java.util.ArrayList<>();
+        
+        for (User user : allUsers) {
+            if (!currentMemberIds.contains(user.getId())) {
+                availableUsers.add(user);
+            }
+        }
+        
+        return availableUsers;
+    }
 }
