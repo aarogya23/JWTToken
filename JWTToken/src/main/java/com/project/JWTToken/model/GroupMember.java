@@ -38,6 +38,7 @@ public class GroupMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
+    @JsonIgnore
     private User approvedBy;
 
     @Column

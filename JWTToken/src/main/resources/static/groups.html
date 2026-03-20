@@ -1156,15 +1156,28 @@ function confirmAddMembers() {
   if(!checked.length){toast('Select at least one user','error');return;}
   const userIds=checked.map(cb=>parseInt(cb.value,10)), names=checked.map(cb=>cb.dataset.name).join(', ');
   const btn=document.getElementById('addMembersConfirmBtn'); btn.disabled=true; btn.textContent='Adding…';
-  fetch(`/api/groups/${curGroupId}/members`,{method:'POST',headers:jH(),body:JSON.stringify({memberIds:userIds})})
-    .then(r=>{if(!r.ok) throw new Error(r.status);return r.json();})
-    .then(()=>{
+  
+  // Add each user one by one
+  let successCount=0, failCount=0;
+  const addNextMember=(index)=>{
+    if(index>=userIds.length){
       btn.disabled=false; btn.textContent='➕ Add Selected';
-      toast(`Added: ${names} ✓`,'success');
-      loadAddableMembers(curGroupId); loadGroupMembers(curGroupId);
-      fetch(`/api/groups/${curGroupId}/members`,{headers:aH()}).then(r=>r.json()).then(members=>{document.getElementById('groupDetailsCount').textContent=members.length;});
-      const srch=document.getElementById('addMemberSearch'); if(srch) srch.value='';
-    }).catch(()=>{btn.disabled=false;btn.textContent='➕ Add Selected';toast('Failed to add members','error');});
+      if(failCount===0){
+        toast(`Added: ${names} ✓`,'success');
+        loadAddableMembers(curGroupId); loadGroupMembers(curGroupId);
+        fetch(`/api/groups/${curGroupId}/members`,{headers:aH()}).then(r=>r.json()).then(members=>{document.getElementById('groupDetailsCount').textContent=members.length;});
+        const srch=document.getElementById('addMemberSearch'); if(srch) srch.value='';
+      } else {
+        toast(`Added ${successCount}, failed ${failCount}`,'info');
+      }
+      return;
+    }
+    fetch(`/api/groups/${curGroupId}/members`,{method:'POST',headers:jH(),body:JSON.stringify({userId:userIds[index]})})
+      .then(r=>{if(!r.ok) throw new Error(r.status);successCount++;})
+      .catch(()=>{failCount++;})
+      .finally(()=>addNextMember(index+1));
+  };
+  addNextMember(0);
 }
 
 function requestToJoinGroup(id) {
