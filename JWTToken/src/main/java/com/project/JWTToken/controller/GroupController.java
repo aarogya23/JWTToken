@@ -140,6 +140,7 @@ public class GroupController {
         }
     }
 
+    //delection of group by id (admin only)
     // Remove a member from group (admin only)
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<?> removeMember(
