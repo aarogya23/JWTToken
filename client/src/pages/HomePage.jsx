@@ -24,11 +24,12 @@ export default function HomePage() {
           marginBottom: '0.5rem',
         }}
       >
-        Welcome to commune
+        Commune — peer marketplace
       </h1>
-      <p className="commune-muted" style={{ marginBottom: '1.5rem', maxWidth: 480 }}>
-        Sign in to see groups, stories, and chat. JWT and Google OAuth are handled
-        by your Spring Boot API.
+      <p className="commune-muted" style={{ marginBottom: '1.5rem', maxWidth: 520 }}>
+        A C2C space where members share products and services, build groups, post
+        stories, and chat. Sign in with email or Google; your JWT is issued by the
+        Spring Boot API.
       </p>
       <div style={{ display: 'flex', gap: 12 }}>
         <Link to="/login" className="commune-tb-btn">

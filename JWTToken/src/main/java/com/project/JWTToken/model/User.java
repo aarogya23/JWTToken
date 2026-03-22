@@ -36,6 +36,8 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    /** Never expose in API responses when embedded in Product/Service JSON. */
+    @JsonIgnore
     private String password;
 
     private String oauthProvider;

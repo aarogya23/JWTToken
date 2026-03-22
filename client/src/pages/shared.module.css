@@ -12,6 +12,53 @@
   max-width: 900px;
 }
 
+.sectionTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(232, 237, 244, 0.92);
+}
+
+.marketGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.marketCard {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.marketCard h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.marketPrice {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(126, 184, 255, 0.95);
+  margin: 0.25rem 0;
+}
+
+.marketSeller {
+  font-size: 0.8rem;
+  color: rgba(232, 237, 244, 0.5);
+  margin-top: 0.35rem;
+}
+
+.marketDesc {
+  font-size: 0.85rem;
+  color: rgba(232, 237, 244, 0.65);
+  margin: 0.35rem 0 0;
+  line-height: 1.4;
+}
+
 .title {
   margin: 0 0 0.35rem;
   font-size: 1.5rem;

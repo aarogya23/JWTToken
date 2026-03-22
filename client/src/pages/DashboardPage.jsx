@@ -636,9 +636,10 @@ export default function DashboardPage() {
         </div>
 
         <p className="commune-muted" style={{ textAlign: 'center' }}>
-          <Link to="/products">Products</Link>
+          C2C marketplace —{' '}
+          <Link to="/products">browse products</Link>
           {' · '}
-          <Link to="/services">Services</Link>
+          <Link to="/services">browse services</Link>
         </p>
       </div>
 

@@ -22,6 +22,11 @@ public class ProductService {
         return productRepository.findByUser(user);
     }
 
+    /** All listings (C2C marketplace browse). */
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
     public Product getProductByIdAndUser(Integer id, User user) {
         return productRepository.findById(id)
                 .filter(product -> product.getUser().equals(user))

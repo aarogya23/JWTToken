@@ -40,6 +40,12 @@ public class ServiceController {
         return ResponseEntity.ok(services);
     }
 
+    /** Peer listings: every member’s services (C2C browse). */
+    @GetMapping("/browse")
+    public ResponseEntity<List<Service>> browseServices() {
+        return ResponseEntity.ok(serviceService.getAllServices());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Service> getService(@PathVariable Integer id, Authentication authentication) {
         User user = (User) authentication.getPrincipal();

@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/commune.css';
 
@@ -27,12 +27,28 @@ export default function Layout() {
             <span style={{ opacity: 0.5 }}>🔍</span>
             <input
               type="search"
-              placeholder="Search stories & groups…"
+              placeholder="Search stories, groups, products…"
               readOnly
               onFocus={() => navigate('/dashboard')}
             />
           </label>
           <div className="commune-topbar-right">
+            <NavLink
+              to="/products"
+              className={({ isActive }) =>
+                `commune-tb-btn ${isActive ? 'primary' : ''}`}
+              style={{ textDecoration: 'none' }}
+            >
+              Products
+            </NavLink>
+            <NavLink
+              to="/services"
+              className={({ isActive }) =>
+                `commune-tb-btn ${isActive ? 'primary' : ''}`}
+              style={{ textDecoration: 'none' }}
+            >
+              Services
+            </NavLink>
             <button
               type="button"
               className="commune-theme-btn"

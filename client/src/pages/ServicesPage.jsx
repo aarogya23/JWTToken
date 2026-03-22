@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../api/client';
+import { useAuth } from '../hooks/useAuth';
 import s from './shared.module.css';
 
 const emptyForm = { name: '', description: '', price: '' };
 
+function sellerLabel(sv) {
+  return sv.user?.fullName || sv.user?.email || 'Member';
+}
+
 export default function ServicesPage() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
+  const [marketItems, setMarketItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
@@ -14,8 +21,12 @@ export default function ServicesPage() {
   const load = useCallback(async () => {
     setError('');
     try {
-      const data = await apiFetch('/api/services');
-      setItems(Array.isArray(data) ? data : []);
+      const [mine, market] = await Promise.all([
+        apiFetch('/api/services'),
+        apiFetch('/api/services/browse'),
+      ]);
+      setItems(Array.isArray(mine) ? mine : []);
+      setMarketItems(Array.isArray(market) ? market : []);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -52,12 +63,12 @@ export default function ServicesPage() {
     }
   }
 
-  function startEdit(p) {
-    setEditingId(p.id);
+  function startEdit(sv) {
+    setEditingId(sv.id);
     setForm({
-      name: p.name || '',
-      description: p.description || '',
-      price: p.price != null ? String(p.price) : '',
+      name: sv.name || '',
+      description: sv.description || '',
+      price: sv.price != null ? String(sv.price) : '',
     });
   }
 
@@ -84,9 +95,38 @@ export default function ServicesPage() {
   return (
     <div className={`${s.card} ${s.wide}`}>
       <h1 className={s.title}>Services</h1>
-      <p className={s.subtitle}>Authenticated CRUD on /api/services.</p>
+      <p className={s.subtitle}>
+        C2C marketplace: discover skills and services from other members, and offer
+        your own. Only you can edit or delete your own listings.
+      </p>
       {error ? <div className={s.error}>{error}</div> : null}
 
+      <h2 className={s.sectionTitle}>From the community</h2>
+      {marketItems.length === 0 ? (
+        <p className={s.muted} style={{ marginBottom: '2rem' }}>
+          No services listed yet — add yours below.
+        </p>
+      ) : (
+        <div className={s.marketGrid}>
+          {marketItems.map((sv) => (
+            <article key={sv.id} className={s.marketCard}>
+              <h3>{sv.name}</h3>
+              <div className={s.marketPrice}>
+                {sv.price != null ? `$${Number(sv.price).toFixed(2)}` : '—'}
+              </div>
+              {sv.description ? <p className={s.marketDesc}>{sv.description}</p> : null}
+              <div className={s.marketSeller}>
+                Provider: {sellerLabel(sv)}
+                {user?.id != null && sv.user?.id === user.id ? (
+                  <span> · You</span>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <h2 className={s.sectionTitle}>Your listings</h2>
       <form onSubmit={handleSubmit} style={{ marginBottom: '1.5rem' }}>
         <div className={s.row}>
           <div className={s.field} style={{ flex: '1 1 160px' }}>
@@ -144,21 +184,21 @@ export default function ServicesPage() {
           {items.length === 0 ? (
             <tr>
               <td colSpan={4} className={s.muted}>
-                No services yet.
+                You have not listed any services yet.
               </td>
             </tr>
           ) : (
-            items.map((p) => (
-              <tr key={p.id}>
-                <td>{p.name}</td>
-                <td>{p.price}</td>
-                <td>{p.description}</td>
+            items.map((sv) => (
+              <tr key={sv.id}>
+                <td>{sv.name}</td>
+                <td>{sv.price}</td>
+                <td>{sv.description}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button
                     type="button"
                     className={`${s.btn} ${s.btnSecondary}`}
                     style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                    onClick={() => startEdit(p)}
+                    onClick={() => startEdit(sv)}
                   >
                     Edit
                   </button>{' '}
@@ -166,7 +206,7 @@ export default function ServicesPage() {
                     type="button"
                     className={`${s.btn} ${s.btnSecondary}`}
                     style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                    onClick={() => remove(p.id)}
+                    onClick={() => remove(sv.id)}
                   >
                     Delete
                   </button>

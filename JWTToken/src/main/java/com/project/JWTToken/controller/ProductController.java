@@ -40,6 +40,12 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    /** Peer listings: every member’s products (C2C browse). */
+    @GetMapping("/browse")
+    public ResponseEntity<List<Product>> browseProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable Integer id, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
