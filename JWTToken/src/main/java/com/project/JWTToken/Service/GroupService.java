@@ -6,8 +6,11 @@ import com.project.JWTToken.repository.GroupMemberRepository;
 import com.project.JWTToken.repository.GroupMembershipRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
@@ -74,6 +77,38 @@ public class GroupService {
 
     public List<Group> getAllGroups() {
         return groupRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    /**
+     * Groups the user created or belongs to (approved member).
+     */
+    public List<Group> getGroupsForUser(User user) {
+        LinkedHashMap<Long, Group> map = new LinkedHashMap<>();
+        for (Group g : groupRepository.findByCreatedBy_IdOrderByCreatedAtDesc(user.getId())) {
+            map.put(g.getId(), g);
+        }
+        for (GroupMember gm : groupMemberRepository.findByUserIdWithGroupFetched(user.getId())) {
+            Group g = gm.getGroup();
+            map.putIfAbsent(g.getId(), g);
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    @Transactional
+    public void deleteGroup(Long groupId, User adminUser) {
+        Group group = getGroupById(groupId);
+        if (!group.getCreatedBy().getId().equals(adminUser.getId())) {
+            throw new RuntimeException("Only the group admin can delete this group");
+        }
+        List<GroupMembershipRequest> reqs = groupMembershipRequestRepository.findByGroupId(groupId);
+        if (!reqs.isEmpty()) {
+            groupMembershipRequestRepository.deleteAll(reqs);
+        }
+        List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
+        if (!members.isEmpty()) {
+            groupMemberRepository.deleteAll(members);
+        }
+        groupRepository.delete(group);
     }
 
     public Group getGroupById(Long id) {

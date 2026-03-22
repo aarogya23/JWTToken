@@ -124,13 +124,58 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getAllGroups());
     }
 
-    @GetMapping("/{id}")
+    /**
+     * Groups the current user created or is a member of (for sidebar "My groups").
+     * Path is /me (not /mine) to avoid clashing with /{id} path variables.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyGroups(@RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(401).body("{\"error\": \"Missing authorization token\"}");
+            }
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            String username = jwtService.extractUsername(actualToken);
+            if (username == null) {
+                return ResponseEntity.status(401).body("{\"error\": \"Invalid token\"}");
+            }
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            return ResponseEntity.ok(groupService.getGroupsForUser(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    @DeleteMapping("/{groupId:\\d+}")
+    public ResponseEntity<?> deleteGroup(
+            @PathVariable Long groupId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(401).body("{\"error\": \"Missing authorization token\"}");
+            }
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            String username = jwtService.extractUsername(actualToken);
+            if (username == null) {
+                return ResponseEntity.status(401).body("{\"error\": \"Invalid token\"}");
+            }
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            groupService.deleteGroup(groupId, user);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<Group> getGroup(@PathVariable Long id) {
         return ResponseEntity.ok(groupService.getGroupById(id));
     }
 
     // Get all approved members of a group
-    @GetMapping("/{groupId}/members")
+    @GetMapping("/{groupId:\\d+}/members")
     public ResponseEntity<?> getGroupMembers(@PathVariable Long groupId) {
         try {
             List<GroupMember> members = groupService.getGroupMembers(groupId);
@@ -142,7 +187,7 @@ public class GroupController {
 
     //delection of group by id (admin only)
     // Remove a member from group (admin only)
-    @DeleteMapping("/{groupId}/members/{userId}")
+    @DeleteMapping("/{groupId:\\d+}/members/{userId}")
     public ResponseEntity<?> removeMember(
             @PathVariable Long groupId,
             @PathVariable Integer userId,
@@ -180,7 +225,7 @@ public class GroupController {
     }
 
     // Get available members for a specific group (users not yet in the group)
-    @GetMapping("/{groupId}/available-members")
+    @GetMapping("/{groupId:\\d+}/available-members")
     public ResponseEntity<?> getAvailableMembersForGroup(
             @PathVariable Long groupId,
             @RequestHeader(value = "Authorization", required = false) String token) {
@@ -220,7 +265,7 @@ public class GroupController {
 
     // Add a member to an existing group (admin only)
    // Update group by adding a member (admin only)
-@PutMapping("/{groupId}/members")
+@PutMapping("/{groupId:\\d+}/members")
 public ResponseEntity<?> addMember(
         @PathVariable Long groupId,
         @RequestBody GroupMemberRequestDto request,

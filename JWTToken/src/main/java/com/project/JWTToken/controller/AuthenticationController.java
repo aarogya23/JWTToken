@@ -5,12 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.project.JWTToken.Service.AuthenticationService;
 import com.project.JWTToken.Service.JwtService;
@@ -55,41 +52,39 @@ public class AuthenticationController {
      * POST /auth/login
      */
     @PostMapping("/login")
-public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto dto) {
-    try {
-        User authenticatedUser = authenticationService.authenticate(dto);
-        String jwtToken = jwtService.generateToken(authenticatedUser);
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto dto) {
+        try {
+            User authenticatedUser = authenticationService.authenticate(dto);
+            String jwtToken = jwtService.generateToken(authenticatedUser);
 
-        // Build response
-        LoginResponse response = LoginResponse.builder()
-                .token(jwtToken)                          // ← fixed
-                .expiresIn(jwtService.getJwtExpirationMs())
-                .build();
+            LoginResponse response = LoginResponse.builder()
+                    .token(jwtToken)
+                    .expiresIn(jwtService.getJwtExpirationMs())
+                    .build();
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
 
-    } catch (BadCredentialsException e) {                 // ← fixed spelling
+        } catch (BadCredentialsException e) {
 
-        LoginResponse errorResponse = LoginResponse.builder()
-                .token(null)                              // ← fixed
-                .expiresIn(0)
-                .build();
+            LoginResponse errorResponse = LoginResponse.builder()
+                    .token(null)
+                    .expiresIn(0)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse);
-    } catch (Exception ex) {
-        // Log the error for debugging
-        System.err.println("Login error: " + ex.getMessage());
-        ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(errorResponse);
+        } catch (Exception ex) {
+            System.err.println("Login error: " + ex.getMessage());
+            ex.printStackTrace();
 
-        LoginResponse errorResponse = LoginResponse.builder()
-                .token(null)
-                .expiresIn(0)
-                .build();
+            LoginResponse errorResponse = LoginResponse.builder()
+                    .token(null)
+                    .expiresIn(0)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
-}
 
 }

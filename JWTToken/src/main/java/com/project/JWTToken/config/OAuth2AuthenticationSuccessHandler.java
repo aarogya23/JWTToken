@@ -10,15 +10,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final AuthenticationService authenticationService;
     private final JwtService jwtService;
+    private final String frontendRedirectBase;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -26,18 +28,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
 
-        // Extract user info from Google
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
 
-        // Find or create user
         User user = authenticationService.findOrCreateOAuth2User(email, name);
 
-        // Generate JWT token
         String jwtToken = jwtService.generateToken(user);
 
-        // Redirect to groups page with token (groups.html will handle the token)
-        String redirectUrl = "http://localhost:8080/groups.html?token=" + jwtToken;
+        String base = frontendRedirectBase.endsWith("/")
+                ? frontendRedirectBase.substring(0, frontendRedirectBase.length() - 1)
+                : frontendRedirectBase;
+        String tokenParam = URLEncoder.encode(jwtToken, StandardCharsets.UTF_8);
+        String redirectUrl = base + "/auth/callback?token=" + tokenParam;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
