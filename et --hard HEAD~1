@@ -1,0 +1,32 @@
+[33m7426a76[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Update on the react code
+[33mbc93f56[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update on the code implementation or refactoring of the code implementation
+[33mb06b1d9[m Update on the code implementation
+[33mb24fb04[m Update on the delection of the group opreation
+[33m7cc4e49[m Update on the code implementation inside the jwtauthenticationfilter
+[33med406db[m update on the putmapping code bro
+[33mdd58688[m Update on the code implementation i.e. update on the admin adding the user after the creation of the actual group
+[33m501d096[m removing the unnecessary testing html files
+[33m8f811dc[m commit on the group creation and member selection bro
+[33mfc83bb4[m Code update on the group membership implementation
+[33m7b19500[m Update on integrating all the main functionality like messaging group creation and story creation along with view inside the same page i.e. group.html
+[33mcdfe5ad[m Update on the code implementation update on adding multiple form of data along with the stories feature which will be visible to all the user
+[33m0fe1c1c[m Update on the code implementation i.e. user can now use multiple form of message i.e.photo audio or any things external
+[33maefc279[m Update on the profile part bro
+[33m234169d[m Update on the home redirect implementation
+[33m51e9c6b[m refactoring the code implementation for group creation
+[33mf3a0ba5[m Update on the group creation
+[33m924b915[m Update on html page with the implementation
+[33md2112c9[m Update on the application properties bro
+[33md661e6d[m Update on the code implementation on the websocket message bro
+[33m5bc5343[m Update on the html page and authetication process
+[33m6e01821[m Update on the code implementation i.e. on websocket application implementation
+[33m5e955eb[m Update on the code implementation for oauth implementation bro
+[33ma28cb55[m Update on the code implementation i.e. update on the product or services code
+[33m150bc6e[m Update on the product or services i.e. each user use
+[33md0b973e[m Update on the overall code implementation
+[33m0c77540[m Update on the code implementation i.e. new Repository for user data and authentication service
+[33m296d4c0[m Update on the dto code i.e. login user dto and login response
+[33mca94f55[m update on the code i.e. updated application.properties file and user model
+[33mffa7ed3[m Update on the code implementation i.e. adding the repository code
+[33m6e16d3b[m Adding the filter class to manahe or gather basic username and password
+[33ma4f354b[m First project initiation on the JWT Token
