@@ -47,7 +47,7 @@ public class ServiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Service> getService(@PathVariable Integer id, Authentication authentication) {
+    public ResponseEntity<Service> getService(@PathVariable("id") Integer id, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         Service service = serviceService.getServiceByIdAndUser(id, user);
         if (service != null) {
@@ -57,7 +57,7 @@ public class ServiceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Service> updateService(@PathVariable Integer id, @RequestBody @Valid ServiceDto dto, Authentication authentication) {
+    public ResponseEntity<Service> updateService(@PathVariable("id") Integer id, @RequestBody @Valid ServiceDto dto, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         Service updatedService = Service.builder()
                 .name(dto.getName())
@@ -72,7 +72,7 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteService(@PathVariable Integer id, Authentication authentication) {
+    public ResponseEntity<Void> deleteService(@PathVariable("id") Integer id, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         boolean deleted = serviceService.deleteService(id, user);
         if (deleted) {

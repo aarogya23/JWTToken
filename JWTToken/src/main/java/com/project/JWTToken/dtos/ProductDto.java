@@ -18,6 +18,8 @@ public class ProductDto {
 
     private String description;
 
+    private String imageUrl;
+
     @NotNull(message = "Price is required")
     private Double price;
 }

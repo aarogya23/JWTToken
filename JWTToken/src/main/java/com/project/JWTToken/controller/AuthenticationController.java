@@ -31,19 +31,17 @@ public class AuthenticationController {
      * POST /auth/signup
      */
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody @Valid RegisterUserDto dto) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterUserDto dto) {
         try {
             User registeredUser = authenticationService.signup(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
         } catch (RuntimeException e) {
-            // Handle duplicate email or other business logic errors
             System.err.println("Signup error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage() != null ? e.getMessage() : "Invalid registration details"));
         } catch (Exception e) {
-            // Handle database or other system errors
             System.err.println("Signup system error: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Internal server error occurred"));
         }
     }
 
@@ -52,7 +50,7 @@ public class AuthenticationController {
      * POST /auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto dto) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginUserDto dto) {
         try {
             User authenticatedUser = authenticationService.authenticate(dto);
             String jwtToken = jwtService.generateToken(authenticatedUser);
@@ -65,25 +63,17 @@ public class AuthenticationController {
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
-
-            LoginResponse errorResponse = LoginResponse.builder()
-                    .token(null)
-                    .expiresIn(0)
-                    .build();
-
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(errorResponse);
+                    .body(java.util.Map.of("message", "Incorrect password or email"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Map.of("message", e.getMessage()));
         } catch (Exception ex) {
             System.err.println("Login error: " + ex.getMessage());
             ex.printStackTrace();
 
-            LoginResponse errorResponse = LoginResponse.builder()
-                    .token(null)
-                    .expiresIn(0)
-                    .build();
-
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse);
+                    .body(java.util.Map.of("message", "Internal server error occurred"));
         }
     }
 

@@ -1,7 +1,6 @@
 package com.project.JWTToken.config;
 
 import com.project.JWTToken.Service.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -10,12 +9,19 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 @Component
-@RequiredArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+    public JwtHandshakeInterceptor(JwtService jwtService, 
+                                   @Qualifier("userDetailsService") UserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     public boolean beforeHandshake(org.springframework.http.server.ServerHttpRequest request,

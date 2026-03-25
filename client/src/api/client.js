@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 
-const TOKEN_KEY = 'jwt_token';
+const TOKEN_KEY = 'jwtToken';
 
 export function getStoredToken() {
   return localStorage.getItem(TOKEN_KEY);

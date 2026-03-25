@@ -149,7 +149,7 @@ public class GroupController {
 
     @DeleteMapping("/{groupId:\\d+}")
     public ResponseEntity<?> deleteGroup(
-            @PathVariable Long groupId,
+            @PathVariable("groupId") Long groupId,
             @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             if (token == null || token.isEmpty()) {
@@ -170,13 +170,13 @@ public class GroupController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public ResponseEntity<Group> getGroup(@PathVariable Long id) {
+    public ResponseEntity<Group> getGroup(@PathVariable("id") Long id) {
         return ResponseEntity.ok(groupService.getGroupById(id));
     }
 
     // Get all approved members of a group
     @GetMapping("/{groupId:\\d+}/members")
-    public ResponseEntity<?> getGroupMembers(@PathVariable Long groupId) {
+    public ResponseEntity<?> getGroupMembers(@PathVariable("groupId") Long groupId) {
         try {
             List<GroupMember> members = groupService.getGroupMembers(groupId);
             return ResponseEntity.ok(members);
@@ -189,8 +189,8 @@ public class GroupController {
     // Remove a member from group (admin only)
     @DeleteMapping("/{groupId:\\d+}/members/{userId}")
     public ResponseEntity<?> removeMember(
-            @PathVariable Long groupId,
-            @PathVariable Integer userId,
+            @PathVariable("groupId") Long groupId,
+            @PathVariable("userId") Integer userId,
             @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             if (token == null || token.isEmpty()) {
@@ -227,7 +227,7 @@ public class GroupController {
     // Get available members for a specific group (users not yet in the group)
     @GetMapping("/{groupId:\\d+}/available-members")
     public ResponseEntity<?> getAvailableMembersForGroup(
-            @PathVariable Long groupId,
+            @PathVariable("groupId") Long groupId,
             @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             if (token == null || token.isEmpty()) {
@@ -267,7 +267,7 @@ public class GroupController {
    // Update group by adding a member (admin only)
 @PutMapping("/{groupId:\\d+}/members")
 public ResponseEntity<?> addMember(
-        @PathVariable Long groupId,
+        @PathVariable("groupId") Long groupId,
         @RequestBody GroupMemberRequestDto request,
         @RequestHeader(value = "Authorization", required = false) String token) {
 

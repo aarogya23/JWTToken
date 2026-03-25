@@ -1,0 +1,340 @@
+/* StoriesBar.css - Strict Vanilla CSS layout since Tailwind is missing */
+
+/* Container for the stories list */
+.sb-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 32px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 100%;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body.dark-mode .sb-container {
+  background-color: #18181b;
+  border-color: #27272a;
+}
+
+/* Individual Story Circle */
+.sb-story-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: max-content;
+  transition: opacity 0.2s;
+}
+
+.sb-story-circle:hover .sb-ring-wrap {
+  transform: scale(1.05);
+}
+
+.sb-ring-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  padding: 2px;
+  margin-bottom: 6px;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sb-ring-active {
+  border: 3px solid #f97316;
+}
+
+.sb-ring-add {
+  border: 2px dashed #f97316;
+  background-color: rgba(249, 115, 22, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f97316;
+}
+
+.sb-ring-add.anim-pulse {
+  animation: sbPulse 1.5s infinite;
+}
+
+@keyframes sbPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.sb-img-box {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+body.dark-mode .sb-img-box {
+  background-color: #27272a;
+}
+
+.sb-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sb-user-label {
+  font-size: 11px;
+  color: #6b7280;
+  width: 68px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-weight: 600;
+}
+
+body.dark-mode .sb-user-label {
+  color: #a1a1aa;
+}
+
+
+/* ======= FULL SCREEN OVERLAY VIEWER ======= */
+
+.sb-viewer-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 99999;
+  background-color: #09090b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Progress Bars */
+.sb-progress-wrap {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  gap: 4px;
+  padding: 16px 12px 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+}
+
+.sb-progress-bar {
+  height: 4px;
+  flex: 1;
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sb-progress-fill {
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Header Info */
+.sb-header {
+  position: absolute;
+  top: 32px; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.sb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sb-header-av {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.4);
+  background-color: rgba(255,255,255,0.1);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+}
+
+.sb-header-av img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.sb-header-text {
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.sb-header-name {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.sb-header-time {
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.sb-close-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.sb-close-btn:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+
+/* Main Media Container */
+.sb-media-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Blurry Background Layer */
+.sb-media-blur {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.15;
+  filter: blur(40px);
+  transform: scale(1.1);
+  background-position: center;
+  background-size: cover;
+}
+
+/* Image / Video Layer */
+.sb-media-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .sb-media-content {
+    width: auto;
+    height: 92vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  }
+}
+
+.sb-media-content img,
+.sb-media-content video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .sb-media-content img,
+  .sb-media-content video {
+    border-radius: 12px;
+  }
+}
+
+/* Tap Navigation Zones */
+.sb-tap-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 30%;
+  z-index: 20;
+  cursor: pointer;
+}
+.sb-tap-left { left: 0; }
+.sb-tap-right { right: 0; }
+
+/* Desktop Navigation Arrows */
+.sb-nav-arrow {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  width: 48px; height: 48px;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.3);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media (min-width: 768px) {
+  .sb-nav-arrow { display: flex; }
+}
+
+.sb-nav-arrow:hover {
+  background-color: rgba(0,0,0,0.6);
+  transform: scale(1.05);
+}
+
+.sb-nav-left { left: 16px; }
+.sb-nav-right { right: 16px; }
+
+/* Caption */
+.sb-caption-box {
+  position: absolute;
+  bottom: 40px;
+  left: 16px; right: 16px;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.sb-caption-text {
+  display: inline-block;
+  background-color: rgba(0,0,0,0.6);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.15);
+  max-width: 80%;
+  line-height: 1.4;
+  backdrop-filter: blur(8px);
+}

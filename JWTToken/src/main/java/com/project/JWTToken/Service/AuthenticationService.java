@@ -38,6 +38,13 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     public User authenticate(LoginUserDto input) {
+        User user = userRepository.findByEmail(input.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (user.getOauthProvider() != null && (user.getPassword() == null || user.getPassword().isEmpty())) {
+            throw new RuntimeException("This account was created via " + user.getOauthProvider() + " Login. Please use " + user.getOauthProvider() + " to sign in.");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.getEmail(),
@@ -45,8 +52,7 @@ public class AuthenticationService implements UserDetailsService {
                 )
         );
 
-        return userRepository.findByEmail(input.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+        return user;
     }
 
     public User findOrCreateOAuth2User(String email, String name) {

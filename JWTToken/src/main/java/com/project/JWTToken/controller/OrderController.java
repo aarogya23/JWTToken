@@ -7,6 +7,7 @@ import com.project.JWTToken.model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
@@ -21,12 +22,19 @@ public class OrderController {
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity<OrderDto> buyProduct(
-            @PathVariable Integer productId,
+    public ResponseEntity<?> buyProduct(
+            @PathVariable("productId") Integer productId,
             Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
-        OrderDto orderDto = orderService.buyProduct(productId, currentUser);
-        return ResponseEntity.ok(orderDto);
+        try {
+            User currentUser = (User) authentication.getPrincipal();
+            OrderDto orderDto = orderService.buyProduct(productId, currentUser);
+            return ResponseEntity.ok(orderDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+            // Return exactly what went wrong so we see it on the frontend alert
+            return ResponseEntity.status(500).body(Map.of("message", "Backend Crash: " + msg));
+        }
     }
 
     @GetMapping("/purchases")
@@ -45,8 +53,8 @@ public class OrderController {
 
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderDto> updateOrderStatus(
-            @PathVariable Integer orderId,
-            @RequestParam OrderStatus status,
+            @PathVariable("orderId") Integer orderId,
+            @RequestParam("status") OrderStatus status,
             Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         OrderDto updatedOrder = orderService.updateOrderStatus(orderId, status, currentUser);

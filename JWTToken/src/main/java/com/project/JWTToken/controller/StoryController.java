@@ -100,7 +100,7 @@ public class StoryController {
      * Get stories by specific user
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserStories(@PathVariable Integer userId) {
+    public ResponseEntity<?> getUserStories(@PathVariable("userId") Integer userId) {
         try {
             List<Story> stories = storyService.getStoriesByUser(userId);
             List<StoryDto> storyDtos = stories.stream()
@@ -118,7 +118,7 @@ public class StoryController {
      * Get story by ID
      */
     @GetMapping("/{storyId}")
-    public ResponseEntity<?> getStory(@PathVariable Long storyId) {
+    public ResponseEntity<?> getStory(@PathVariable("storyId") Long storyId) {
         try {
             Optional<Story> story = storyService.getStoryById(storyId);
             if (story.isPresent()) {
@@ -138,7 +138,7 @@ public class StoryController {
      */
     @DeleteMapping("/{storyId}")
     public ResponseEntity<?> deleteStory(
-            @PathVariable Long storyId,
+            @PathVariable("storyId") Long storyId,
             @RequestHeader("Authorization") String token) {
         try {
             // Extract current user

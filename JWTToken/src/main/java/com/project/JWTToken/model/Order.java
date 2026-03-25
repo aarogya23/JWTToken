@@ -27,6 +27,10 @@ public class Order {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_person_id")
+    private User deliveryPerson;
+
     @Column(nullable = false)
     private Double price;
 

@@ -738,27 +738,57 @@ html[data-theme='dark'] {
   margin-bottom: 12px;
 }
 
-/* Group chat (aligned with groups.html chat box) */
+/* Group chat (Bottom Right Messenger style) */
 .commune-chat-box {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  box-shadow: var(--sh-lg);
-  width: 100%;
-  max-width: 560px;
-  height: min(80vh, 640px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  width: 360px;
+  height: min(70vh, 520px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  /* Floating positioning */
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  
+  /* Entrance animation */
+  animation: chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes chatSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .commune-chat-box {
+    width: calc(100% - 32px);
+    right: 16px;
+    bottom: 16px;
+  }
 }
 
 .commune-chat-head {
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  z-index: 10;
 }
 
 .commune-chat-head-av {
@@ -801,11 +831,11 @@ html[data-theme='dark'] {
 .commune-chat-msgs {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
-  background: var(--bg);
+  padding: 16px;
+  background: var(--canvas);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .commune-chat-empty {
@@ -839,13 +869,13 @@ html[data-theme='dark'] {
 
 .commune-msg-bbl {
   max-width: 78%;
-  padding: 9px 13px;
-  border-radius: 16px;
+  padding: 10px 14px;
+  border-radius: 18px;
   font-size: 13.5px;
-  line-height: 1.55;
-  border: 1px solid var(--border);
-  background: var(--white);
+  line-height: 1.45;
+  background: var(--surf2);
   color: var(--text);
+  border: none;
 }
 
 .commune-msg-row.other .commune-msg-bbl {

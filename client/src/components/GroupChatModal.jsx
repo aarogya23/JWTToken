@@ -120,18 +120,12 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
 
   return (
     <div
-      className="commune-modal-backdrop"
-      style={{ zIndex: 500, alignItems: 'center' }}
-      role="presentation"
-      onClick={onClose}
+      className="commune-chat-box"
+      role="dialog"
+      aria-label="Group chat"
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="commune-chat-box"
-        role="dialog"
-        aria-label="Group chat"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="commune-chat-head">
+      <div className="commune-chat-head">
           <div className="commune-chat-head-av">💬</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="commune-chat-title">{groupName || 'Group chat'}</div>
@@ -225,7 +219,6 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
             ➤
           </button>
         </div>
-      </div>
     </div>
   );
 }

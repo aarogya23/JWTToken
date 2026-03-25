@@ -49,6 +49,9 @@ public class User implements UserDetails {
     @Column(columnDefinition = "LONGTEXT")
     private String profileImage;
 
+    @Column(name = "is_delivery_person", nullable = false)
+    private boolean isDeliveryPerson = false;
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {

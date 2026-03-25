@@ -25,9 +25,12 @@ public class Product {
 
     private Double price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageUrl;
 
     @Builder.Default
     @Column(nullable = false)

@@ -29,8 +29,12 @@ public class ProductService {
 
     public Product getProductByIdAndUser(Integer id, User user) {
         return productRepository.findById(id)
-                .filter(product -> product.getUser().equals(user))
+                .filter(product -> product.getUser().getId().equals(user.getId()))
                 .orElse(null);
+    }
+
+    public Product getProductById(Integer id) {
+        return productRepository.findById(id).orElse(null);
     }
 
     public Product updateProduct(Integer id, Product updatedProduct, User user) {
@@ -39,6 +43,9 @@ public class ProductService {
             product.setName(updatedProduct.getName());
             product.setDescription(updatedProduct.getDescription());
             product.setPrice(updatedProduct.getPrice());
+            if (updatedProduct.getImageUrl() != null) {
+                product.setImageUrl(updatedProduct.getImageUrl());
+            }
             return productRepository.save(product);
         }
         return null;

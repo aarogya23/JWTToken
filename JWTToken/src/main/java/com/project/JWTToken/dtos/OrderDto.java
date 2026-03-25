@@ -14,6 +14,12 @@ public class OrderDto {
     private Integer id;
     private Integer buyerId;
     private String buyerName;
+    private Integer sellerId;
+    private String sellerName;
+    private String buyerLocation;
+    private String sellerLocation;
+    private Integer deliveryPersonId;
+    private String deliveryPersonName;
     private Integer productId;
     private String productName;
     private Double price;

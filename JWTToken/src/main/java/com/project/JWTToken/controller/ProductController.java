@@ -27,6 +27,7 @@ public class ProductController {
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .price(dto.getPrice())
+                .imageUrl(dto.getImageUrl())
                 .user(user)
                 .build();
         Product savedProduct = productService.createProduct(product);
@@ -47,9 +48,8 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable Integer id, Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        Product product = productService.getProductByIdAndUser(id, user);
+    public ResponseEntity<Product> getProduct(@PathVariable("id") Integer id) {
+        Product product = productService.getProductById(id);
         if (product != null) {
             return ResponseEntity.ok(product);
         }
@@ -57,12 +57,13 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody @Valid ProductDto dto, Authentication authentication) {
+    public ResponseEntity<Product> updateProduct(@PathVariable("id") Integer id, @RequestBody @Valid ProductDto dto, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         Product updatedProduct = Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .price(dto.getPrice())
+                .imageUrl(dto.getImageUrl())
                 .build();
         Product product = productService.updateProduct(id, updatedProduct, user);
         if (product != null) {
@@ -72,7 +73,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Integer id, Authentication authentication) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable("id") Integer id, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         boolean deleted = productService.deleteProduct(id, user);
         if (deleted) {

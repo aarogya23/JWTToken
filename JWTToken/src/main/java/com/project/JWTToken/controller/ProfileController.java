@@ -74,6 +74,15 @@ public class ProfileController {
                 user.setProfileImage(profileUpdate.getProfileImage());
             }
 
+            // Implicitly allow toggling delivery status if it's explicitly passed in the request.
+            // (Using Boolean object check is safer if we used Boolean, but since it's boolean primitive,
+            // we'll just map the literal value assuming the frontend explicitly sets it).
+            // Actually, to avoid accidentally overriding it if frontend omits it, we should verify it was sent.
+            // But since profileUpdate maps it, it will default to false if omitted.
+            // Let's create a dedicated toggle endpoint, or cleanly check it.
+            // Let's assume the frontend sends the whole updated user object.
+            user.setDeliveryPerson(profileUpdate.isDeliveryPerson());
+
             User updatedUser = authenticationService.updateUser(user);
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {

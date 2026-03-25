@@ -1,105 +1,52 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './hooks/useAuth';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import DashboardPage from './pages/DashboardPage';
-import GroupsPage from './pages/GroupsPage';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import ProductsPage from './pages/ProductsPage';
-import ProfilePage from './pages/ProfilePage';
-import RegisterPage from './pages/RegisterPage';
-import ServicesPage from './pages/ServicesPage';
-import StoriesPage from './pages/StoriesPage';
+import { useAuth } from './context/AuthContext';
 
-function GuestRoute({ children }) {
-  const { isAuthenticated, loading, token } = useAuth();
-  if (loading && token) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.85 }}>
-        Loading…
-      </div>
-    );
-  }
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import CreateProduct from './pages/CreateProduct';
+import ProductDetails from './pages/ProductDetails';
+import MyProducts from './pages/MyProducts';
+import MyOrders from './pages/MyOrders';
+import Profile from './pages/Profile';
+import Groups from './pages/Groups';
+import GroupChat from './pages/GroupChat';
+import DeliveryDashboard from './pages/DeliveryDashboard';
+
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (!user) return <Navigate to="/login" />;
+  
   return children;
-}
+};
 
-export default function App() {
+function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route
-          path="/login"
-          element={
-            <GuestRoute>
-              <LoginPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <GuestRoute>
-              <RegisterPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/products"
-          element={
-            <ProtectedRoute>
-              <ProductsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/services"
-          element={
-            <ProtectedRoute>
-              <ServicesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/groups"
-          element={
-            <ProtectedRoute>
-              <GroupsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/stories"
-          element={
-            <ProtectedRoute>
-              <StoriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/" element={<Layout />}>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<Navigate to="/" replace />} />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/products/:id" element={<ProtectedRoute><ProductDetails /></ProtectedRoute>} />
+        <Route path="/create-product" element={<ProtectedRoute><CreateProduct /></ProtectedRoute>} />
+        <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
+        <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+        <Route path="/delivery-jobs" element={<ProtectedRoute><DeliveryDashboard /></ProtectedRoute>} />
+
+        
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+        <Route path="/groups/:id/chat" element={<ProtectedRoute><GroupChat /></ProtectedRoute>} />
       </Route>
     </Routes>
   );
 }
+
+export default App;
