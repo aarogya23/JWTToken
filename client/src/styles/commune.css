@@ -1183,3 +1183,24 @@ html[data-theme='dark'] {
 .story-viewer-arrow-right {
   right: 8px;
 }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .commune-layout {
+    flex-direction: column;
+    padding: 10px;
+  }
+  
+  .commune-sidebar {
+    width: 100%;
+    position: static;
+  }
+  
+  .commune-topbar {
+    padding: 0 10px;
+  }
+  
+  .commune-search {
+    max-width: 140px;
+  }
+}

@@ -7,6 +7,7 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import FullScreenDeliveryMap from '../components/FullScreenDeliveryMap';
 import './DeliveryDashboard.css';
 
 // Create a custom robust truck icon
@@ -34,6 +35,7 @@ const DeliveryDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('available');
+  const [fullScreenMapJob, setFullScreenMapJob] = useState(null);
   
   // Real-time tracking states
   const [broadcastingJobId, setBroadcastingJobId] = useState(null);
@@ -289,23 +291,31 @@ const DeliveryDashboard = () => {
                     <span className="job-earnings-amount"><DollarSign size={20} className="inline -mt-1"/>{((job.price || 0) * 0.15).toFixed(2)}</span>
                   </div>
                   {job.status === 'OUT_FOR_DELIVERY' ? (
-                    <div className="flex gap-2">
-                       {broadcastingJobId === job.id ? (
-                          <button className="btn font-bold flex items-center gap-2" 
-                                  style={{ background: '#ef4444', color: 'white', border: 'none' }} 
-                                  onClick={stopBroadcasting}>
-                            <Radio size={18} className="animate-pulse" /> Stop GPS Track
-                          </button>
-                       ) : (
-                          <button className="btn font-bold flex items-center gap-2" 
-                                  style={{ background: '#3b82f6', color: 'white', border: 'none' }} 
-                                  onClick={() => startBroadcasting(job.id)}>
-                            <Radio size={18} /> Broadcast GPS
-                          </button>
-                       )}
-                      <button className="btn-deliver" onClick={() => markDelivered(job.id)}>
-                        <Navigation size={20} /> Mark Delivered
-                      </button>
+                    <div className="flex flex-col gap-2 w-full">
+                       <button 
+                          className="btn flex items-center justify-center gap-2 mb-2" 
+                          style={{ background: '#4f46e5', color: 'white', border: 'none', width: '100%', padding: '0.75rem' }}
+                          onClick={() => setFullScreenMapJob(job)}>
+                          <Navigation size={18} /> View Detailed Delivery Route Map
+                       </button>
+                       <div className="flex gap-2 w-full">
+                         {broadcastingJobId === job.id ? (
+                            <button className="btn font-bold flex items-center justify-center gap-2 flex-1" 
+                                    style={{ background: '#ef4444', color: 'white', border: 'none' }} 
+                                    onClick={stopBroadcasting}>
+                              <Radio size={18} className="animate-pulse" /> Stop GPS Track
+                            </button>
+                         ) : (
+                            <button className="btn font-bold flex items-center justify-center gap-2 flex-1" 
+                                    style={{ background: '#3b82f6', color: 'white', border: 'none' }} 
+                                    onClick={() => startBroadcasting(job.id)}>
+                              <Radio size={18} /> Broadcast GPS
+                            </button>
+                         )}
+                        <button className="btn-deliver flex-1" onClick={() => markDelivered(job.id)}>
+                          <CheckCircle size={20} /> Mark Delivered
+                        </button>
+                       </div>
                     </div>
                   ) : (
                     <span className="text-success font-bold flex items-center gap-2">
@@ -318,6 +328,14 @@ const DeliveryDashboard = () => {
           )
         )}
       </div>
+
+      {fullScreenMapJob && (
+        <FullScreenDeliveryMap 
+          job={fullScreenMapJob} 
+          driverLocation={broadcastingJobId === fullScreenMapJob.id ? currentLocation : null}
+          onClose={() => setFullScreenMapJob(null)} 
+        />
+      )}
     </div>
   );
 };

@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .job-card {
@@ -162,6 +163,14 @@
 .job-earnings {
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .job-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 
 .job-earnings-label {

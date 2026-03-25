@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import { Navigation } from 'lucide-react';
+import FullScreenDeliveryMap from './FullScreenDeliveryMap';
 
 // Create a custom robust truck icon
 const truckIcon = new L.Icon({
@@ -21,9 +23,10 @@ function MapPanController({ position }) {
   return null;
 }
 
-const LiveTrackingMap = ({ orderId, driverName }) => {
+const LiveTrackingMap = ({ order }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [showFullScreen, setShowFullScreen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -37,7 +40,7 @@ const LiveTrackingMap = ({ orderId, driverName }) => {
 
     client.onConnect = () => {
       setIsConnected(true);
-      client.subscribe(`/topic/delivery/${orderId}`, (message) => {
+      client.subscribe(`/topic/delivery/${order.id}`, (message) => {
         if (message.body) {
           const payload = JSON.parse(message.body);
           setDriverLocation([payload.lat, payload.lng]);
@@ -51,7 +54,7 @@ const LiveTrackingMap = ({ orderId, driverName }) => {
     return () => {
       client.deactivate();
     };
-  }, [orderId]);
+  }, [order.id]);
 
   if (!driverLocation) {
     return (
@@ -61,7 +64,7 @@ const LiveTrackingMap = ({ orderId, driverName }) => {
            WAITING FOR COURIER SATELLITE UPLINK...
         </div>
         <p className="text-sm mt-2 opacity-80" style={{ fontWeight: 'normal' }}>
-          {driverName} has not shared their navigation telemetry yet.
+          {order.deliveryPersonName || 'Courier'} has not shared their navigation telemetry yet.
         </p>
       </div>
     );
@@ -83,13 +86,27 @@ const LiveTrackingMap = ({ orderId, driverName }) => {
           />
           <Marker position={driverLocation} icon={truckIcon}>
             <Popup>
-              <b>{driverName || 'Courier'}</b> is here!<br/>
+              <b>{order.deliveryPersonName || 'Courier'}</b> is here!<br/>
               Delivering your order rapidly.
             </Popup>
           </Marker>
           <MapPanController position={driverLocation} />
         </MapContainer>
       </div>
+      <button 
+        onClick={() => setShowFullScreen(true)}
+        className="mt-3 flex items-center justify-center gap-2 w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm"
+      >
+        <Navigation size={16} /> View Full Screen Delivery Route
+      </button>
+
+      {showFullScreen && (
+        <FullScreenDeliveryMap
+          job={order}
+          driverLocation={driverLocation}
+          onClose={() => setShowFullScreen(false)}
+        />
+      )}
     </div>
   );
 };

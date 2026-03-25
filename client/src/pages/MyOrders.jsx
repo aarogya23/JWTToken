@@ -168,7 +168,15 @@ const MyOrders = () => {
                       </div>
                     )}
                   </div>
-                  <div className="order-price-container">
+                  
+                  {/* Live Tracking for Delivery */}
+                  {order.status === 'OUT_FOR_DELIVERY' && (
+                    <div className="mt-4 pb-2 border-t pt-4">
+                      <LiveTrackingMap order={order} />
+                    </div>
+                  )}
+
+                  <div className="order-price-container mt-4">
                     <p className="order-price">${(order.price || 0).toFixed(2)}</p>
                     <span className={`order-status ${order.status === 'PENDING' ? 'status-pending' : 'status-completed'}`}>
                       {order.status || 'PROCESSING'}
