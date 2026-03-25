@@ -1,73 +1,99 @@
-# JWT Chat Application
+# Next-Gen C2C Marketplace & Delivery Logistics Platform
 
-This Spring Boot application provides JWT-based authentication with Google OAuth2 integration and real-time chat functionality using WebSocket.
+A comprehensive, full-stack application combining Customer-to-Customer (C2C) e-commerce with real-time gig-economy logistics and modern social engagement features. Built meticulously with **Spring Boot 3** and **React**.
 
-## Features
+## 🚀 Key Features
 
-- User registration and login with JWT tokens
-- Google OAuth2 authentication
-- Real-time chat with WebSocket/STOMP
-- Secure WebSocket connections with JWT authentication
-- Dedicated login/registration page with modern UI
+### 🛍️ Customer-to-Customer (C2C) Marketplace
+- **Seamless Trading:** Users can effortlessly list, discover, and purchase products from one another.
+- **Product Management:** Sellers have full control over their inventory and product listings.
+- **Order Tracking:** Buyers can view and manage their purchase history with real-time status updates.
 
-## API Endpoints
+### 🚚 Gig-Economy Delivery System
+- **3-Way Transaction Model:** Interconnects Sellers, Couriers, and Buyers in a unified logistics network.
+- **Courier Dispatch Center:** Dedicated interface for delivery drivers to browse available jobs, accept deliveries, and manage their active routes.
+- **Automated Payout Calculations:** Drivers earn competitive delivery fees (e.g., a 15% standardized cut of the product value).
 
-### Authentication
-- `POST /auth/signup` - Register new user
-- `POST /auth/login` - Login with email/password
-- `GET /oauth2/authorization/google` - Google OAuth2 login
+### 📡 Real-Time GPS Tracking
+- **Live Telemetry Engine:** Utilizes the browser's Geolocation API to ping location data directly to the server.
+- **WebSocket Broadcasting:** Powered by STOMP/SockJS, locations are streamed instantly to buyers.
+- **Interactive Maps:** Integration with `react-leaflet` and OpenStreetMap to visually render delivery progress on both the Driver and Buyer sides. 
 
-### Chat
-- WebSocket endpoint: `/ws`
-- STOMP destination: `/app/chat.sendMessage`
-- STOMP destination: `/app/chat.addUser`
-- Subscribe to: `/topic/public`
+### 💬 Social & Engagement
+- **Facebook-Style Stories:** Users can post and view ephemeral 24-hour stories, boosting platform engagement with a high-end UI carousel.
+- **Floating Global Chat widget:** Persistent, messenger-style chat component accessible from any page, ensuring users are always connected.
+- **Real-Time Group Chat:** Dedicated group chat rooms leveraging WebSockets for instant, reliable communication.
 
-## Testing the Application
+### 🔐 Security & Identity
+- **Robust Authentication:** Secure Email/Password registration and login.
+- **Google OAuth2 Integration:** 1-click single sign-on experience.
+- **Stateless Sessions:** JWT (JSON Web Token) based API security.
+- **Role-Based Access Control:** Distinct boundaries between standard users and delivery personnel.
 
-1. **Start the application:**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+---
 
-2. **Access the groups page:**
-   - Open: `http://localhost:8080/groups.html`
+## 🛠️ Tech Stack
 
-3. **Authentication options:**
-   - **Register:** Create a new account with email/password
-   - **Login:** Sign in with existing credentials
-   - **Google OAuth2:** Click "Continue with Google" (credentials already configured)
+### 🖥️ Backend (Java)
+- **Framework:** Spring Boot 3.3.x
+- **Data Persistence:** Spring Data JPA / Hibernate mapped to **MySQL**
+- **Security:** Spring Security, JWT Auth, OAuth2 Resource Server
+- **Real-time Engine:** Spring WebSocket, STOMP message broker core
 
-4. **Group management:**
-   - Create new groups
-   - View existing groups
-   - Click on a group to join the chat
+### 📱 Frontend (React)
+- **Framework & Build Tools:** React 18, Vite
+- **Routing:** React Router DOM (v6)
+- **Real-time Clients:** `sockjs-client`, `@stomp/stompjs`
+- **Mapping:** `leaflet`, `react-leaflet`
+- **UI/UX Aesthetics:** Highly customized Vanilla CSS, modern glassmorphic elements, `lucide-react` iconography
 
-5. **Chat functionality:**
-   - After joining a group, you'll be redirected to the chat room
-   - Send messages to all connected users in the group in real-time
-   - User join notifications are displayed
-   - Messages are persisted and visible to new users joining the group
-   - Click "Back to Groups" to return to group selection
-   - Click "Logout" to return to login page
+---
 
-## WebSocket Connection
+## ⚙️ Getting Started
 
-The WebSocket connection requires JWT authentication:
-- Connect to: `ws://localhost:8080/ws?token=YOUR_JWT_TOKEN`
-- Use STOMP over SockJS for browser compatibility
+### Prerequisites
+- **Java 17+**
+- **Node.js 18+**
+- **MySQL Server** (running locally or remotely)
+- **Maven** (optional, wrapper is included)
 
-## Security
+### 1. Database Setup
+Ensure you have a MySQL server running. Create a schema for the app, or adjust the `application.properties` connection string:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/jwttoken?createDatabaseIfNotExist=true
+spring.datasource.username=YOUR_USERNAME
+spring.datasource.password=YOUR_PASSWORD
+```
 
-- All WebSocket connections are authenticated using JWT tokens
-- Only authenticated users can join the chat
-- Messages include sender information and timestamps
+### 2. Google OAuth2 Configuration
+Configure your OAuth credentials in `application.properties`:
+```properties
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+```
 
-## Technologies Used
+### 3. Run the Spring Boot Backend
+Navigate to the `JWTToken` root directory where `pom.xml` is located:
+```bash
+./mvnw spring-boot:run
+```
+The server will start on `http://localhost:8080`.
 
-- Spring Boot 3.3.5
-- Spring Security with JWT
-- Spring WebSocket with STOMP
-- SockJS for browser fallback
-- MySQL database
-- Google OAuth2
+### 4. Run the React Frontend
+Open a new terminal and navigate to the `client` directory:
+```bash
+cd client
+npm install
+npm run dev
+```
+The application UI will launch (default: `http://localhost:5173`).
+
+---
+
+## 🧪 Testing Workflows
+1. **Signup/Login:** Create a standard User account or sign in with Google.
+2. **List a Product:** Be a Seller by navigating to `My Products` and creating a listing.
+3. **Make a Purchase:** With a separate account, buy the listed item.
+4. **Delivery Job:** With a Delivery Driver account, check the Dispatch Center, accept the job, and start "Broadcasting GPS".
+5. **Live Tracking:** Login as the buyer and view the interactive Leaflet map to see the delivery driver moving in real-time!
+6. **Social:** Check the Groups or post a Story!
