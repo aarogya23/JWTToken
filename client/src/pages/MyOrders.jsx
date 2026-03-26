@@ -3,6 +3,7 @@ import { ShoppingBag, MapPin, Edit2, Check, X, Box, User as UserIcon, Truck } fr
 import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { formatNPR } from '../utils/currency';
 import LiveTrackingMap from '../components/LiveTrackingMap';
 import './MyOrders.css';
 
@@ -177,7 +178,7 @@ const MyOrders = () => {
                   )}
 
                   <div className="order-price-container mt-4">
-                    <p className="order-price">${(order.price || 0).toFixed(2)}</p>
+                    <p className="order-price">{formatNPR(order.price || 0)}</p>
                     <span className={`order-status ${order.status === 'PENDING' ? 'status-pending' : 'status-completed'}`}>
                       {order.status || 'PROCESSING'}
                     </span>
@@ -219,7 +220,7 @@ const MyOrders = () => {
                     )}
                   </div>
                   <div className="order-price-container">
-                    <p className="order-price">${(order.price || 0).toFixed(2)}</p>
+                    <p className="order-price">{formatNPR(order.price || 0)}</p>
                     <span className="order-status status-pending" style={{ backgroundColor: '#2563eb', color: 'white' }}>
                       CASH ON DELIVERY
                     </span>

@@ -49,6 +49,14 @@ public class User implements UserDetails {
     @Column(columnDefinition = "LONGTEXT")
     private String profileImage;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String marketSegment = "B2C";
+
+    private String businessName;
+
+    private String logisticsSupport;
+
     @Column(name = "is_delivery_person", nullable = false)
     private boolean isDeliveryPerson = false;
 

@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,17 +48,7 @@ public class ChatController {
                                    @Payload ChatMessage chatMessage,
                                    SimpMessageHeaderAccessor headerAccessor) {
         try {
-            // Try to get username from session
-            String username = (String) headerAccessor.getSessionAttributes().get("username");
-            
-            // If not in session, try to extract from JWT or use sender from payload
-            if (username == null && chatMessage.getSender() != null) {
-                username = chatMessage.getSender();
-            }
-            
-            if (username == null) {
-                username = "Anonymous";
-            }
+            String username = resolveChatUsername(headerAccessor, chatMessage);
 
             // Verify the user is approved member or admin for this group
             if (!groupService.isApprovedMember(groupId, username) && !groupService.isGroupAdmin(groupId, username)) {
@@ -85,15 +76,7 @@ public class ChatController {
                                @Payload ChatMessage chatMessage,
                                SimpMessageHeaderAccessor headerAccessor) {
         try {
-            String username = (String) headerAccessor.getSessionAttributes().get("username");
-            
-            if (username == null && chatMessage.getSender() != null) {
-                username = chatMessage.getSender();
-            }
-            
-            if (username == null) {
-                username = "Anonymous";
-            }
+            String username = resolveChatUsername(headerAccessor, chatMessage);
             
             if (!groupService.isApprovedMember(groupId, username) && !groupService.isGroupAdmin(groupId, username)) {
                 ChatMessage forbidden = ChatMessage.builder()
@@ -115,6 +98,28 @@ public class ChatController {
             e.printStackTrace();
             return chatMessage;
         }
+    }
+
+    private String resolveChatUsername(SimpMessageHeaderAccessor headerAccessor, ChatMessage chatMessage) {
+        if (headerAccessor != null) {
+            if (headerAccessor.getUser() != null && StringUtils.hasText(headerAccessor.getUser().getName())) {
+                return headerAccessor.getUser().getName();
+            }
+
+            Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+            if (sessionAttributes != null) {
+                Object username = sessionAttributes.get("username");
+                if (username instanceof String usernameValue && StringUtils.hasText(usernameValue)) {
+                    return usernameValue;
+                }
+            }
+        }
+
+        if (chatMessage != null && StringUtils.hasText(chatMessage.getSender())) {
+            return chatMessage.getSender();
+        }
+
+        return "Anonymous";
     }
 
     @GetMapping("/api/chat/history")

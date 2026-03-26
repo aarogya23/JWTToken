@@ -6,7 +6,16 @@ import './Auth.css'; // Reuse some standard card CSS
 
 const Profile = () => {
   const { user, refreshProfile } = useAuth();
-  const [profile, setProfile] = useState({ fullName: '', bio: '', location: '', profileImage: '', deliveryPerson: false });
+  const [profile, setProfile] = useState({
+    fullName: '',
+    bio: '',
+    location: '',
+    profileImage: '',
+    deliveryPerson: false,
+    marketSegment: 'B2C',
+    businessName: '',
+    logisticsSupport: '',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +34,10 @@ const Profile = () => {
         bio: response.data.bio || '',
         location: response.data.location || '',
         profileImage: response.data.profileImage || '',
-        deliveryPerson: response.data.deliveryPerson || false
+        deliveryPerson: response.data.deliveryPerson || false,
+        marketSegment: response.data.marketSegment || 'B2C',
+        businessName: response.data.businessName || '',
+        logisticsSupport: response.data.logisticsSupport || '',
       });
     } catch (err) {
       setError('Failed to load profile');
@@ -143,6 +155,29 @@ const Profile = () => {
               />
             </div>
             <div className="form-group">
+              <label className="form-label" htmlFor="marketSegment">Market Segment</label>
+              <select
+                id="marketSegment"
+                className="form-input"
+                value={profile.marketSegment}
+                onChange={handleChange}
+              >
+                <option value="B2C">B2C</option>
+                <option value="B2B">B2B</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="businessName">Business Name</label>
+              <input
+                id="businessName"
+                type="text"
+                className="form-input"
+                value={profile.businessName}
+                onChange={handleChange}
+                placeholder="e.g. Everest Trade Supplies"
+              />
+            </div>
+            <div className="form-group">
               <label className="form-label" htmlFor="bio">Bio</label>
               <textarea 
                 id="bio" 
@@ -151,6 +186,17 @@ const Profile = () => {
                 value={profile.bio} 
                 onChange={handleChange} 
                 placeholder="Tell others a bit about yourself"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="logisticsSupport">Logistics / Fulfillment Notes</label>
+              <textarea
+                id="logisticsSupport"
+                className="form-input"
+                rows="3"
+                value={profile.logisticsSupport}
+                onChange={handleChange}
+                placeholder="Describe dispatch coverage, delivery windows, warehouse handling, bulk shipping, etc."
               />
             </div>
 

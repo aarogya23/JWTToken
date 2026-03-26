@@ -49,6 +49,7 @@ export default function FloatingChatWidget() {
   const clientRef = useRef(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  const chatIdentity = user?.email || user?.username || null;
 
   // Fetch groups
   const fetchGroupsList = useCallback(() => {
@@ -206,10 +207,14 @@ export default function FloatingChatWidget() {
     const text = input.trim();
     const client = clientRef.current;
     if (!text || !client?.connected || !activeGroup) return;
+    if (!chatIdentity) {
+      setStatus('Missing user identity for chat.');
+      return;
+    }
 
     const payload = {
       content: text,
-      sender: user?.email || user?.fullName || user?.username || 'User',
+      sender: chatIdentity,
       type: 'CHAT',
       room: activeGroup.id,
       timestamp: new Date().toISOString(),
@@ -244,7 +249,7 @@ export default function FloatingChatWidget() {
       if (client?.connected) {
         const payload = {
           content: `Shared a file: ${fileName}`,
-          sender: user?.email || user?.fullName || user?.username || 'User',
+          sender: chatIdentity,
           type: 'CHAT',
           room: activeGroup.id,
           fileUrl, fileName, fileType, fileSize,
@@ -432,7 +437,7 @@ export default function FloatingChatWidget() {
                     <div className="cw-empty-state">{status || 'No messages yet.'}</div>
                   ) : (
                     messages.map((msg, idx) => {
-                      const own = (msg.sender === ownEmail) || (msg.sender === user?.fullName);
+                      const own = msg.sender === ownEmail;
                       const displaySender = msg.sender && msg.sender.includes('@') ? msg.sender.split('@')[0] : msg.sender;
                       const fileSrc = msg.fileUrl ? getChatFileDataUrl(msg) : '';
                       const ft = (msg.fileType || '').toLowerCase();
@@ -450,6 +455,13 @@ export default function FloatingChatWidget() {
                             {fileSrc && ft.startsWith('image/') && (
                               <div className="cw-msg-media">
                                 <img src={fileSrc} alt="" />
+                              </div>
+                            )}
+                            {fileSrc && !ft.startsWith('image/') && (
+                              <div className="cw-msg-media">
+                                <a href={fileSrc} target="_blank" rel="noreferrer" className="cw-file-link">
+                                  {msg.fileName || 'Open attachment'}
+                                </a>
                               </div>
                             )}
                             <div className="cw-msg-ts">

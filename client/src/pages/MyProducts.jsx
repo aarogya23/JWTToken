@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Trash2, Edit } from 'lucide-react';
+import {
+  AlertCircle,
+  Archive,
+  Package,
+  Plus,
+  Tag,
+  Trash2,
+} from 'lucide-react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { formatNPR } from '../utils/currency';
 import './Products.css';
 
 const MyProducts = () => {
@@ -17,30 +25,19 @@ const MyProducts = () => {
 
   const fetchMyProducts = async () => {
     try {
-      // For this simple implementation, fetch all and filter by current user
-      // Alternatively, the backend could have a dedicated /api/products/me endpoint
       const response = await api.get('/api/products');
-      
-      // Filter locally for now, since we don't have a guaranteed "/me" endpoint based on the grep
-      // Wait, ProductController shows @GetMapping. It usually returns the user's products 
-      // based on the auth token if we look at best practices. We'll try just hitting /api/products 
-      // If it returns all, we filter. If it returns mine, done.
       const allProducts = response.data;
-      
+
       if (Array.isArray(allProducts)) {
-         // Filter by my username just in case it returns all
-         const mine = allProducts.filter(p => p.user?.username === user?.username);
-         // If it's already only mine, it won't hurt
-         if (mine.length === 0 && allProducts.length > 0) {
-            // maybe user obj is structured differently, just set all for now if backend handled it
-            setProducts(allProducts); 
-         } else {
-            setProducts(mine);
-         }
+        const mine = allProducts.filter((product) => product.user?.username === user?.username);
+        if (mine.length === 0 && allProducts.length > 0) {
+          setProducts(allProducts);
+        } else {
+          setProducts(mine);
+        }
       } else {
-         setProducts([]);
+        setProducts([]);
       }
-      
     } catch (err) {
       setError('Failed to load your products');
       console.error(err);
@@ -51,75 +48,157 @@ const MyProducts = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) return;
-    
+
     try {
       await api.delete(`/api/products/${id}`);
-      setProducts(products.filter(p => p.id !== id));
+      setProducts(products.filter((product) => product.id !== id));
     } catch (err) {
       alert('Failed to delete listing');
     }
   };
 
+  const stats = useMemo(() => {
+    const active = products.filter((product) => !product.sold);
+    const sold = products.filter((product) => product.sold);
+    const totalValue = active.reduce(
+      (sum, product) => sum + Number(product.price || 0),
+      0,
+    );
+
+    return {
+      total: products.length,
+      active: active.length,
+      sold: sold.length,
+      totalValue,
+    };
+  }, [products]);
+
   if (loading) return <div className="text-center mt-8">Loading your listings...</div>;
 
   return (
-    <div className="dashboard-container">
-      <div className="flex justify-between items-center mb-8 gap-4 flex-wrap">
+    <div className="inventory-page">
+      <section className="inventory-hero">
         <div>
-          <h1>My Inventory</h1>
-          <p className="text-muted">Manage the items you are selling.</p>
+          <span className="social-pill">
+            <Archive size={14} /> Seller studio
+          </span>
+          <h1>My inventory</h1>
+          <p>
+            Track everything you have listed, see what is live, and remove old items fast.
+          </p>
         </div>
-        <Link to="/create-product" className="btn btn-primary">
-          List New Item
+        <Link to="/create-product" className="btn btn-primary social-hero-btn">
+          <Plus size={18} /> List new item
         </Link>
-      </div>
+      </section>
+
+      <section className="inventory-stats">
+        <div className="inventory-stat-card">
+          <span>Total listings</span>
+          <strong>{stats.total}</strong>
+        </div>
+        <div className="inventory-stat-card">
+          <span>Active now</span>
+          <strong>{stats.active}</strong>
+        </div>
+        <div className="inventory-stat-card">
+          <span>Sold items</span>
+          <strong>{stats.sold}</strong>
+        </div>
+        <div className="inventory-stat-card">
+          <span>Live value</span>
+          <strong>{formatNPR(stats.totalValue)}</strong>
+        </div>
+      </section>
 
       {error ? (
         <div className="auth-error text-center">{error}</div>
       ) : products.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-state social-empty-state">
           <Package size={48} className="text-muted mb-4" />
           <h3>No items listed</h3>
           <p className="text-muted">You haven't added any products to sell yet.</p>
-          <Link to="/create-product" className="btn btn-primary mt-4">Create One Now</Link>
+          <Link to="/create-product" className="btn btn-primary mt-4">
+            Create One Now
+          </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-4">
-          {products.map(product => (
-            <div key={product.id} className="card product-card">
-              <div className="product-image-placeholder" style={{ height: '150px' }}>
+        <section className="inventory-grid">
+          {products.map((product) => (
+            <article key={product.id} className="inventory-card">
+              <div className="inventory-card-media">
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderTopLeftRadius: 'var(--radius)', borderTopRightRadius: 'var(--radius)' }} />
+                  <img src={product.imageUrl} alt={product.name} />
                 ) : (
-                  <Package size={30} className="text-muted opacity-50" />
+                  <div className="product-image-placeholder inventory-card-fallback">
+                    <Package size={34} className="text-muted opacity-50" />
+                  </div>
                 )}
               </div>
-              <div className="card-body">
-                <Link to={`/products/${product.id}`} className="hover:text-primary">
-                  <h3 className="product-title" style={{ fontSize: '1rem' }}>{product.name}</h3>
+
+              <div className="inventory-card-body">
+                <div className="inventory-card-topline">
+                  <span className={`inventory-badge ${product.sold ? 'sold' : 'active'}`}>
+                    {product.sold ? 'Sold' : 'Active'}
+                  </span>
+                  <span className="inventory-owner">
+                    {user?.profileImage ? (
+                      <img src={user.profileImage} alt={user?.fullName || 'User'} />
+                    ) : (
+                      <Tag size={14} />
+                    )}
+                    {user?.fullName || user?.username || 'Seller'}
+                  </span>
+                </div>
+
+                <Link to={`/products/${product.id}`} className="inventory-card-link">
+                  <h3 className="product-title">{product.name}</h3>
                 </Link>
-                <p className="product-price">${product.price.toFixed(2)}</p>
-                <div className="mt-2 text-sm">
-                  Status: <span className={product.sold ? 'text-danger font-bold' : 'text-secondary font-bold'}>
-                    {product.sold ? 'Sold' : 'Available'}
+
+                <div className="inventory-market-row">
+                  <span className="inventory-badge active">{product.targetMarket || 'B2C'}</span>
+                  <span className="inventory-moq">
+                    MOQ {product.minimumOrderQuantity || 1}
+                  </span>
+                </div>
+
+                <p className="inventory-price">
+                  <Tag size={18} />
+                  {formatNPR(product.price || 0)}
+                </p>
+
+                <p className="inventory-description">
+                  {product.description || 'No description added for this listing yet.'}
+                </p>
+                {product.logisticsSupport ? (
+                  <p className="inventory-logistics">
+                    Logistics: {product.logisticsSupport}
+                  </p>
+                ) : null}
+
+                <div className="inventory-status-row">
+                  <span>
+                    <AlertCircle size={15} />
+                    {product.sold ? 'Already completed sale' : 'Visible in marketplace'}
                   </span>
                 </div>
               </div>
-              <div className="card-footer p-3 bg-background border-t">
-                <div className="flex gap-2">
-                  <button 
-                    className="btn btn-danger flex-1" 
-                    style={{ padding: '0.4rem' }}
-                    onClick={() => handleDelete(product.id)}
-                    disabled={product.sold} // prevent deleting sold items
-                  >
-                    <Trash2 size={16} /> Delete
-                  </button>
-                </div>
+
+              <div className="inventory-card-footer">
+                <Link to={`/products/${product.id}`} className="btn btn-outline inventory-btn">
+                  View details
+                </Link>
+                <button
+                  className="btn btn-danger inventory-btn"
+                  onClick={() => handleDelete(product.id)}
+                  disabled={product.sold}
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
               </div>
-            </div>
+            </article>
           ))}
-        </div>
+        </section>
       )}
     </div>
   );

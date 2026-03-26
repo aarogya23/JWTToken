@@ -28,6 +28,9 @@ public class ProductController {
                 .description(dto.getDescription())
                 .price(dto.getPrice())
                 .imageUrl(dto.getImageUrl())
+                .targetMarket(dto.getTargetMarket() == null || dto.getTargetMarket().isBlank() ? "B2C" : dto.getTargetMarket())
+                .minimumOrderQuantity(dto.getMinimumOrderQuantity())
+                .logisticsSupport(dto.getLogisticsSupport())
                 .user(user)
                 .build();
         Product savedProduct = productService.createProduct(product);
@@ -64,6 +67,9 @@ public class ProductController {
                 .description(dto.getDescription())
                 .price(dto.getPrice())
                 .imageUrl(dto.getImageUrl())
+                .targetMarket(dto.getTargetMarket() == null || dto.getTargetMarket().isBlank() ? "B2C" : dto.getTargetMarket())
+                .minimumOrderQuantity(dto.getMinimumOrderQuantity())
+                .logisticsSupport(dto.getLogisticsSupport())
                 .build();
         Product product = productService.updateProduct(id, updatedProduct, user);
         if (product != null) {

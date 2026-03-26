@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Truck, MapPin, Package, CheckCircle, Navigation, DollarSign, Radio } from 'lucide-react';
+import { Truck, MapPin, Package, CheckCircle, Navigation, Radio } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -7,6 +7,7 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { formatNPR } from '../utils/currency';
 import FullScreenDeliveryMap from '../components/FullScreenDeliveryMap';
 import './DeliveryDashboard.css';
 
@@ -221,8 +222,7 @@ const DeliveryDashboard = () => {
                 <div className="job-footer">
                   <div className="job-earnings">
                     <span className="job-earnings-label">COURIER FEE</span>
-                    {/* Hardcoding 15% courier fee based on standard gig economy patterns */}
-                    <span className="job-earnings-amount"><DollarSign size={20} className="inline -mt-1"/>{((job.price || 0) * 0.15).toFixed(2)}</span>
+                    <span className="job-earnings-amount">{formatNPR((job.price || 0) * 0.15)}</span>
                   </div>
                   <button className="btn-accept" onClick={() => acceptJob(job.id)}>
                     <CheckCircle size={20} /> Accept Job
@@ -288,7 +288,7 @@ const DeliveryDashboard = () => {
                 <div className="job-footer">
                   <div className="job-earnings">
                     <span className="job-earnings-label">PAYOUT</span>
-                    <span className="job-earnings-amount"><DollarSign size={20} className="inline -mt-1"/>{((job.price || 0) * 0.15).toFixed(2)}</span>
+                    <span className="job-earnings-amount">{formatNPR((job.price || 0) * 0.15)}</span>
                   </div>
                   {job.status === 'OUT_FOR_DELIVERY' ? (
                     <div className="flex flex-col gap-2 w-full">

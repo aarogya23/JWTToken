@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, ArrowLeft, Tag } from 'lucide-react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import { formatNPR } from '../utils/currency';
 import './Products.css';
 
 const ProductDetails = () => {
@@ -76,16 +77,33 @@ const ProductDetails = () => {
           <div className="detail-info">
             <div>
               <h1 className="mb-2">{product.name}</h1>
-              <p className="product-price" style={{ fontSize: '2rem' }}>${product.price.toFixed(2)}</p>
+              <p className="product-price" style={{ fontSize: '2rem' }}>
+                {formatNPR(product.price || 0)}
+              </p>
+              <p className="text-muted">
+                Market: <span className="font-bold">{product.targetMarket || 'B2C'}</span>
+                {' · '}
+                MOQ: <span className="font-bold">{product.minimumOrderQuantity || 1}</span>
+              </p>
             </div>
             
             <div className="bg-background p-4 rounded-lg" style={{ borderRadius: 'var(--radius)' }}>
               <h3 className="mb-2">Description</h3>
               <p style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
             </div>
+            {product.logisticsSupport ? (
+              <div className="bg-background p-4 rounded-lg" style={{ borderRadius: 'var(--radius)' }}>
+                <h3 className="mb-2">Logistics Support</h3>
+                <p style={{ whiteSpace: 'pre-line' }}>{product.logisticsSupport}</p>
+              </div>
+            ) : null}
             
             <div>
               <p className="text-muted">Seller: <span className="font-bold">{product.user?.fullName || 'Unknown User'}</span></p>
+              {product.user?.businessName ? (
+                <p className="text-muted">Business: <span className="font-bold">{product.user.businessName}</span></p>
+              ) : null}
+              <p className="text-muted">Seller segment: <span className="font-bold">{product.user?.marketSegment || 'B2C'}</span></p>
               <p className="text-muted">Status: <span className={`font-bold ${product.sold ? 'text-danger' : 'text-secondary'}`}>{product.sold ? 'Sold' : 'Available'}</span></p>
             </div>
             

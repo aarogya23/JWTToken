@@ -32,6 +32,14 @@ public class Product {
     @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String targetMarket = "B2C";
+
+    private Integer minimumOrderQuantity;
+
+    private String logisticsSupport;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean isSold = false;

@@ -46,6 +46,11 @@ public class ProductService {
             if (updatedProduct.getImageUrl() != null) {
                 product.setImageUrl(updatedProduct.getImageUrl());
             }
+            if (updatedProduct.getTargetMarket() != null && !updatedProduct.getTargetMarket().isBlank()) {
+                product.setTargetMarket(updatedProduct.getTargetMarket());
+            }
+            product.setMinimumOrderQuantity(updatedProduct.getMinimumOrderQuantity());
+            product.setLogisticsSupport(updatedProduct.getLogisticsSupport());
             return productRepository.save(product);
         }
         return null;

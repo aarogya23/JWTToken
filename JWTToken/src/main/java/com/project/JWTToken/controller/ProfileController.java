@@ -73,6 +73,15 @@ public class ProfileController {
             if (profileUpdate.getProfileImage() != null) {
                 user.setProfileImage(profileUpdate.getProfileImage());
             }
+            if (profileUpdate.getMarketSegment() != null && !profileUpdate.getMarketSegment().isEmpty()) {
+                user.setMarketSegment(profileUpdate.getMarketSegment());
+            }
+            if (profileUpdate.getBusinessName() != null) {
+                user.setBusinessName(profileUpdate.getBusinessName());
+            }
+            if (profileUpdate.getLogisticsSupport() != null) {
+                user.setLogisticsSupport(profileUpdate.getLogisticsSupport());
+            }
 
             // Implicitly allow toggling delivery status if it's explicitly passed in the request.
             // (Using Boolean object check is safer if we used Boolean, but since it's boolean primitive,

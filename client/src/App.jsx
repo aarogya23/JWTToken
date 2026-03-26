@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Groups from './pages/Groups';
 import GroupChat from './pages/GroupChat';
 import DeliveryDashboard from './pages/DeliveryDashboard';
+import ServicesPage from './pages/ServicesPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -39,6 +40,7 @@ function App() {
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
         <Route path="/delivery-jobs" element={<ProtectedRoute><DeliveryDashboard /></ProtectedRoute>} />
+        <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
         
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

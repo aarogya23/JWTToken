@@ -8,6 +8,9 @@ const CreateProduct = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [targetMarket, setTargetMarket] = useState('B2C');
+  const [minimumOrderQuantity, setMinimumOrderQuantity] = useState('1');
+  const [logisticsSupport, setLogisticsSupport] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +28,11 @@ const CreateProduct = () => {
         name,
         description,
         price: parseFloat(price),
-        imageUrl
+        imageUrl,
+        targetMarket,
+        minimumOrderQuantity:
+          targetMarket === 'B2B' ? parseInt(minimumOrderQuantity || '1', 10) : 1,
+        logisticsSupport,
       });
       navigate('/');
     } catch (err) {
@@ -115,7 +122,7 @@ const CreateProduct = () => {
             </div>
             
             <div className="form-group">
-              <label className="form-label" htmlFor="price">Price ($)</label>
+              <label className="form-label" htmlFor="price">Price (NPR)</label>
               <input 
                 id="price"
                 type="number" 
@@ -124,7 +131,7 @@ const CreateProduct = () => {
                 className="form-input" 
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="e.g. 49.99"
+                placeholder="e.g. 6500"
                 required 
               />
             </div>
@@ -140,6 +147,45 @@ const CreateProduct = () => {
                 placeholder="Describe the item's condition, features, etc."
                 required 
               ></textarea>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="targetMarket">Target Market</label>
+              <select
+                id="targetMarket"
+                className="form-input"
+                value={targetMarket}
+                onChange={(e) => setTargetMarket(e.target.value)}
+              >
+                <option value="B2C">B2C retail customers</option>
+                <option value="B2B">B2B business buyers</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="minimumOrderQuantity">
+                Minimum Order Quantity
+              </label>
+              <input
+                id="minimumOrderQuantity"
+                type="number"
+                min="1"
+                className="form-input"
+                value={minimumOrderQuantity}
+                onChange={(e) => setMinimumOrderQuantity(e.target.value)}
+                placeholder="e.g. 25"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="logisticsSupport">
+                Logistics / Fulfillment Details
+              </label>
+              <textarea
+                id="logisticsSupport"
+                className="form-input"
+                rows="4"
+                value={logisticsSupport}
+                onChange={(e) => setLogisticsSupport(e.target.value)}
+                placeholder="Dispatch zones, warehouse handling, courier coordination, delivery timelines, etc."
+              />
             </div>
             
             <div className="flex gap-4 mt-6">

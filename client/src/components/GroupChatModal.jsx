@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Paperclip } from 'lucide-react';
+import api from '../api/axiosConfig';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { apiFetch, getStoredToken } from '../api/client';
@@ -22,8 +24,10 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [status, setStatus] = useState('');
+  const [uploading, setUploading] = useState(false);
   const clientRef = useRef(null);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -99,9 +103,15 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
       return;
     }
 
+    const chatIdentity = user?.email || user?.username || null;
+    if (!chatIdentity) {
+      setStatus('Missing user identity for chat.');
+      return;
+    }
+
     const payload = {
       content: text,
-      sender: user?.email || user?.fullName || 'User',
+      sender: chatIdentity,
       type: 'CHAT',
       room: groupId,
       timestamp: new Date().toISOString(),
@@ -112,6 +122,46 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
       body: JSON.stringify(payload),
     });
     setInput('');
+  }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    const client = clientRef.current;
+    const chatIdentity = user?.email || user?.username || null;
+    if (!file || !client?.connected || !chatIdentity) {
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post('/api/chat/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const { fileUrl, fileName, fileType, fileSize } = response.data;
+      client.publish({
+        destination: `/app/chat.sendMessage/${groupId}`,
+        body: JSON.stringify({
+          content: `Shared a file: ${fileName}`,
+          sender: chatIdentity,
+          type: 'CHAT',
+          room: groupId,
+          fileUrl,
+          fileName,
+          fileType,
+          fileSize,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+    } catch {
+      setStatus('Failed to upload attachment.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   if (!open || groupId == null) return null;
@@ -194,6 +244,13 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
                         <audio src={fileSrc} controls />
                       </div>
                     ) : null}
+                    {fileSrc && !ft.startsWith('image/') && !ft.startsWith('video/') && !ft.startsWith('audio/') ? (
+                      <div className="commune-msg-media">
+                        <a href={fileSrc} target="_blank" rel="noreferrer" className="cw-file-link">
+                          {msg.fileName || 'Open attachment'}
+                        </a>
+                      </div>
+                    ) : null}
                     <div className="commune-msg-ts">{formatChatTime(msg.timestamp)}</div>
                   </div>
                 </div>
@@ -203,9 +260,24 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
           <div ref={bottomRef} />
         </div>
         <div className="commune-chat-foot">
+          <button
+            type="button"
+            className="cw-icon-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Paperclip size={18} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: 'none' }}
+            onChange={handleFileUpload}
+            accept="image/*,.pdf,.doc,.docx,.txt"
+          />
           <input
             className="commune-chat-in"
-            placeholder="Type a message…"
+            placeholder={uploading ? 'Uploading receipt...' : 'Type a message…'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -214,6 +286,7 @@ export default function GroupChatModal({ groupId, groupName, open, onClose, user
                 send();
               }
             }}
+            disabled={uploading}
           />
           <button type="button" className="commune-chat-send" onClick={send}>
             ➤

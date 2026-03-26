@@ -22,4 +22,11 @@ public class ProductDto {
 
     @NotNull(message = "Price is required")
     private Double price;
+
+    @Builder.Default
+    private String targetMarket = "B2C";
+
+    private Integer minimumOrderQuantity;
+
+    private String logisticsSupport;
 }
