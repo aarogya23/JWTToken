@@ -37,6 +37,7 @@ const Layout = () => {
     () => [
       { to: '/', label: 'Dashboard', icon: Store },
       { to: '/my-products', label: 'My Products', icon: Package },
+      { to: '/retail-inventory', label: 'Inventory', icon: ShoppingBag },
       { to: '/my-orders', label: 'My Orders', icon: ShoppingBag },
       { to: '/services', label: 'Services', icon: Truck },
       { to: '/profile', label: 'Profile', icon: User },
@@ -48,14 +49,15 @@ const Layout = () => {
     () => [
       { to: '/', label: 'Home', icon: Store },
       { to: '/my-products', label: 'Products', icon: Package },
-      { to: '/create-product', label: 'Create', icon: PlusSquare },
       { to: '/services', label: 'Services', icon: Truck },
+      { to: '/create-product', label: 'Create', icon: PlusSquare },
     ],
     [],
   );
 
   const mobileMenuItems = useMemo(() => {
     const items = [
+      { to: '/retail-inventory', label: 'Inventory', icon: ShoppingBag },
       { to: '/my-orders', label: 'Orders', icon: ShoppingBag },
       { to: '/profile', label: 'Profile', icon: User },
     ];

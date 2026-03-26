@@ -7,6 +7,8 @@ const CreateProduct = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('Clothing');
+  const [stockQuantity, setStockQuantity] = useState('0');
   const [imageUrl, setImageUrl] = useState('');
   const [targetMarket, setTargetMarket] = useState('B2C');
   const [minimumOrderQuantity, setMinimumOrderQuantity] = useState('1');
@@ -28,6 +30,8 @@ const CreateProduct = () => {
         name,
         description,
         price: parseFloat(price),
+        category,
+        stockQuantity: parseInt(stockQuantity || '0', 10),
         imageUrl,
         targetMarket,
         minimumOrderQuantity:
@@ -133,6 +137,35 @@ const CreateProduct = () => {
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="e.g. 6500"
                 required 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="category">Category</label>
+              <select
+                id="category"
+                className="form-input"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="Clothing">Clothing</option>
+                <option value="T-Shirts">T-Shirts</option>
+                <option value="Pants">Pants</option>
+                <option value="Sportswear">Sportswear</option>
+                <option value="Shoes">Shoes</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="stockQuantity">Stock Quantity</label>
+              <input
+                id="stockQuantity"
+                type="number"
+                min="0"
+                className="form-input"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
+                placeholder="e.g. 120"
               />
             </div>
             

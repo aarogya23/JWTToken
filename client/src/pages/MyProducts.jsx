@@ -156,9 +156,13 @@ const MyProducts = () => {
                 </Link>
 
                 <div className="inventory-market-row">
+                  <span className="inventory-moq">{product.category || 'General'}</span>
                   <span className="inventory-badge active">{product.targetMarket || 'B2C'}</span>
                   <span className="inventory-moq">
                     MOQ {product.minimumOrderQuantity || 1}
+                  </span>
+                  <span className="inventory-moq">
+                    Stock {product.stockQuantity || 0}
                   </span>
                 </div>
 

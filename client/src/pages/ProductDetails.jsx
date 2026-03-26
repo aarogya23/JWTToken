@@ -1,6 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Tag } from 'lucide-react';
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  PackageCheck,
+  Search,
+  ShoppingCart,
+  Tag,
+  Truck,
+} from 'lucide-react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { formatNPR } from '../utils/currency';
@@ -10,11 +19,13 @@ const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [buying, setBuying] = useState(false);
+  const [zoomActive, setZoomActive] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
 
   useEffect(() => {
     fetchProduct();
@@ -34,7 +45,7 @@ const ProductDetails = () => {
 
   const handleBuy = async () => {
     if (!window.confirm('Do you want to confirm this Cash on Delivery purchase?')) return;
-    
+
     setBuying(true);
     try {
       await api.post(`/api/orders/${id}`);
@@ -48,6 +59,16 @@ const ProductDetails = () => {
     }
   };
 
+  const handleImageMove = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+    setZoomPosition({
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
+  };
+
   if (loading) return <div className="text-center mt-8">Loading details...</div>;
   if (error) return <div className="auth-error text-center mt-8">{error}</div>;
   if (!product) return <div className="text-center mt-8">Product not found</div>;
@@ -55,82 +76,155 @@ const ProductDetails = () => {
   const isOwner = user && product.user && user.email === product.user.email;
 
   return (
-    <div className="product-details-container">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="btn btn-outline mb-6"
-        style={{ padding: '0.4rem 0.8rem' }}
-      >
-        <ArrowLeft size={16} /> Back
-      </button>
-      
-      <div className="card">
-        <div className="card-body detail-grid">
-          <div className="detail-image" style={{ overflow: 'hidden' }}>
+    <div className="product-detail-page">
+      <div className="product-detail-topbar">
+        <button
+          onClick={() => navigate(-1)}
+          className="btn btn-outline product-detail-back"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
+        <span className="social-pill">
+          <Search size={14} /> Hover image to zoom
+        </span>
+      </div>
+
+      <section className="product-detail-shell">
+        <div className="product-detail-gallery-column">
+          <div
+            className="product-detail-gallery"
+            onMouseMove={product.imageUrl ? handleImageMove : undefined}
+            onMouseEnter={() => product.imageUrl && setZoomActive(true)}
+            onMouseLeave={() => setZoomActive(false)}
+          >
             {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="product-detail-main-image"
+              />
             ) : (
-              <Tag size={80} className="text-muted opacity-50" />
+              <div className="product-detail-empty-image">
+                <Tag size={88} className="text-muted opacity-50" />
+              </div>
             )}
+            {product.imageUrl && zoomActive ? (
+              <div
+                className="product-detail-zoom-lens"
+                style={{
+                  left: `calc(${zoomPosition.x}% - 70px)`,
+                  top: `calc(${zoomPosition.y}% - 70px)`,
+                }}
+              />
+            ) : null}
           </div>
-          
-          <div className="detail-info">
-            <div>
-              <h1 className="mb-2">{product.name}</h1>
-              <p className="product-price" style={{ fontSize: '2rem' }}>
-                {formatNPR(product.price || 0)}
-              </p>
-              <p className="text-muted">
-                Market: <span className="font-bold">{product.targetMarket || 'B2C'}</span>
-                {' · '}
-                MOQ: <span className="font-bold">{product.minimumOrderQuantity || 1}</span>
-              </p>
+
+          {product.imageUrl ? (
+            <div
+              className={`product-detail-zoom-panel ${zoomActive ? 'active' : ''}`}
+              style={{
+                backgroundImage: `url(${product.imageUrl})`,
+                backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+              }}
+            />
+          ) : null}
+        </div>
+
+        <div className="product-detail-info">
+          <div className="product-detail-card">
+            <div className="product-detail-heading">
+              <div>
+                <div className="product-detail-badges">
+                  <span className="inventory-badge active">{product.targetMarket || 'B2C'}</span>
+                  <span className="social-feed-tag secondary">{product.category || 'General'}</span>
+                </div>
+                <h1>{product.name}</h1>
+                <p className="product-detail-price">{formatNPR(product.price || 0)}</p>
+              </div>
             </div>
-            
-            <div className="bg-background p-4 rounded-lg" style={{ borderRadius: 'var(--radius)' }}>
-              <h3 className="mb-2">Description</h3>
-              <p style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
+
+            <div className="product-detail-meta-grid">
+              <div className="product-detail-meta-card">
+                <PackageCheck size={18} />
+                <div>
+                  <strong>Stock</strong>
+                  <span>{product.stockQuantity || 0} units ready</span>
+                </div>
+              </div>
+              <div className="product-detail-meta-card">
+                <Tag size={18} />
+                <div>
+                  <strong>MOQ</strong>
+                  <span>{product.minimumOrderQuantity || 1} units</span>
+                </div>
+              </div>
+              <div className="product-detail-meta-card">
+                <Building2 size={18} />
+                <div>
+                  <strong>Seller Type</strong>
+                  <span>{product.user?.marketSegment || 'B2C'}</span>
+                </div>
+              </div>
+              <div className="product-detail-meta-card">
+                <MapPin size={18} />
+                <div>
+                  <strong>Location</strong>
+                  <span>{product.user?.location || 'Not specified'}</span>
+                </div>
+              </div>
             </div>
+
+            <div className="product-detail-section">
+              <h3>Product overview</h3>
+              <p>{product.description || 'No description available for this product yet.'}</p>
+            </div>
+
             {product.logisticsSupport ? (
-              <div className="bg-background p-4 rounded-lg" style={{ borderRadius: 'var(--radius)' }}>
-                <h3 className="mb-2">Logistics Support</h3>
-                <p style={{ whiteSpace: 'pre-line' }}>{product.logisticsSupport}</p>
+              <div className="product-detail-section product-detail-section-soft">
+                <h3>
+                  <Truck size={18} /> Logistics support
+                </h3>
+                <p>{product.logisticsSupport}</p>
               </div>
             ) : null}
-            
-            <div>
-              <p className="text-muted">Seller: <span className="font-bold">{product.user?.fullName || 'Unknown User'}</span></p>
-              {product.user?.businessName ? (
-                <p className="text-muted">Business: <span className="font-bold">{product.user.businessName}</span></p>
-              ) : null}
-              <p className="text-muted">Seller segment: <span className="font-bold">{product.user?.marketSegment || 'B2C'}</span></p>
-              <p className="text-muted">Status: <span className={`font-bold ${product.sold ? 'text-danger' : 'text-secondary'}`}>{product.sold ? 'Sold' : 'Available'}</span></p>
+
+            <div className="product-detail-seller">
+              <div className="product-detail-seller-avatar">
+                {product.user?.profileImage ? (
+                  <img src={product.user.profileImage} alt={product.user?.fullName || 'Seller'} />
+                ) : (
+                  (product.user?.fullName || 'S').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div>
+                <strong>{product.user?.fullName || 'Unknown seller'}</strong>
+                <p>{product.user?.businessName || 'Independent retailer'}</p>
+              </div>
             </div>
-            
-            <div className="mt-4 pt-4 border-t">
+
+            <div className="product-detail-cta">
               {!isOwner && !product.sold ? (
-                <button 
-                  className="btn btn-primary w-full" 
+                <button
+                  className="btn btn-primary product-detail-buy"
                   onClick={handleBuy}
                   disabled={buying}
-                  style={{ padding: '1rem', fontSize: '1.1rem' }}
                 >
-                  <ShoppingCart size={20} className="inline-block mr-2" /> 
-                  {buying ? 'Processing...' : 'Buy - Cash on Delivery'}
+                  <ShoppingCart size={20} />
+                  {buying ? 'Processing...' : 'Buy Now'}
                 </button>
               ) : isOwner ? (
-                <div className="text-center text-muted p-3 bg-background" style={{ borderRadius: 'var(--radius)' }}>
-                  This is your own listing
+                <div className="product-detail-banner muted">
+                  This is your own listing.
                 </div>
               ) : (
-                <div className="text-center text-danger p-3 bg-red-50" style={{ backgroundColor: '#FEE2E2', borderRadius: 'var(--radius)' }}>
-                  This item has already been sold
+                <div className="product-detail-banner danger">
+                  This item has already been sold.
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

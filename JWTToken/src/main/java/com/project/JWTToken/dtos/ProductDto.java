@@ -23,6 +23,11 @@ public class ProductDto {
     @NotNull(message = "Price is required")
     private Double price;
 
+    private String category;
+
+    @Builder.Default
+    private Integer stockQuantity = 0;
+
     @Builder.Default
     private String targetMarket = "B2C";
 

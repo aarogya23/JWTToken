@@ -19,12 +19,12 @@ public class ProductService {
     }
 
     public List<Product> getProductsByUser(User user) {
-        return productRepository.findByUser(user);
+        return productRepository.findByUserAndIsSoldFalse(user);
     }
 
     /** All listings (C2C marketplace browse). */
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findByIsSoldFalse();
     }
 
     public Product getProductByIdAndUser(Integer id, User user) {
@@ -34,7 +34,9 @@ public class ProductService {
     }
 
     public Product getProductById(Integer id) {
-        return productRepository.findById(id).orElse(null);
+        return productRepository.findById(id)
+                .filter(product -> !product.isSold())
+                .orElse(null);
     }
 
     public Product updateProduct(Integer id, Product updatedProduct, User user) {
@@ -43,6 +45,8 @@ public class ProductService {
             product.setName(updatedProduct.getName());
             product.setDescription(updatedProduct.getDescription());
             product.setPrice(updatedProduct.getPrice());
+            product.setCategory(updatedProduct.getCategory());
+            product.setStockQuantity(updatedProduct.getStockQuantity() == null ? 0 : updatedProduct.getStockQuantity());
             if (updatedProduct.getImageUrl() != null) {
                 product.setImageUrl(updatedProduct.getImageUrl());
             }

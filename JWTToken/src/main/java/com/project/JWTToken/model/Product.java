@@ -25,6 +25,12 @@ public class Product {
 
     private Double price;
 
+    private String category;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer stockQuantity = 0;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

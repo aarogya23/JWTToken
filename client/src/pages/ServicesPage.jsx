@@ -109,6 +109,7 @@ export default function ServicesPage() {
   const [services, setServices] = useState([]);
   const [requests, setRequests] = useState([]);
   const [organizations, setOrganizations] = useState([]);
+  const [retailers, setRetailers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -127,10 +128,14 @@ export default function ServicesPage() {
     loadRequests();
   }, []);
 
-  const updateOrganizations = (mappedLiveServices) => {
+  const updateOrganizations = (mappedLiveServices, retailerDirectory = []) => {
     const orgSet = new Set();
     profileOptions.forEach((option) => {
       if (option.businessName) orgSet.add(option.businessName);
+    });
+    retailerDirectory.forEach((retailer) => {
+      if (retailer.businessName) orgSet.add(retailer.businessName);
+      else if (retailer.fullName) orgSet.add(retailer.fullName);
     });
     mappedLiveServices.forEach((service) => {
       if (service.providerName) orgSet.add(service.providerName);
@@ -143,8 +148,13 @@ export default function ServicesPage() {
 
   const loadServices = async () => {
     try {
-      const res = await api.get('/api/services/browse');
-      const liveServices = Array.isArray(res.data) ? res.data : [];
+      const [servicesRes, retailersRes] = await Promise.all([
+        api.get('/api/services/browse'),
+        api.get('/api/retailers'),
+      ]);
+      const retailerDirectory = Array.isArray(retailersRes.data) ? retailersRes.data : [];
+      setRetailers(retailerDirectory);
+      const liveServices = Array.isArray(servicesRes.data) ? servicesRes.data : [];
       const mappedLive = liveServices.map((service) => ({
         ...service,
         providerName: service.user?.businessName || service.user?.fullName || 'Service provider',
@@ -154,10 +164,11 @@ export default function ServicesPage() {
           service.user?.logisticsSupport || 'Provider will coordinate delivery or on-site support.',
       }));
       setServices(mappedLive);
-      updateOrganizations(mappedLive);
+      updateOrganizations(mappedLive, retailerDirectory);
     } catch {
       setServices([]);
-      updateOrganizations([]);
+      setRetailers([]);
+      updateOrganizations([], []);
     } finally {
       setLoading(false);
     }
@@ -245,6 +256,16 @@ export default function ServicesPage() {
     });
   };
 
+  const chooseRetailer = (retailer) => {
+    const retailerName = retailer.businessName || retailer.fullName || '';
+    setForm((prev) => ({
+      ...prev,
+      destinationOrganization: retailerName,
+      marketSegment: retailer.marketSegment || prev.marketSegment,
+      requirements: `${prev.shipmentType}\nTarget retailer: ${retailerName}\nNeed details: `,
+    }));
+  };
+
   return (
     <div className="inventory-page">
       <section className="inventory-hero">
@@ -296,6 +317,22 @@ export default function ServicesPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="services-retailer-strip">
+            {retailers.slice(0, 8).map((retailer) => {
+              const retailerName = retailer.businessName || retailer.fullName;
+              return (
+                <button
+                  key={retailer.id}
+                  type="button"
+                  className="services-retailer-pill"
+                  onClick={() => chooseRetailer(retailer)}
+                >
+                  {retailerName}
+                </button>
+              );
+            })}
           </div>
 
           <div className="services-market-grid">
