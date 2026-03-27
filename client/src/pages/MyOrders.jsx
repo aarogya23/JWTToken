@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, MapPin, Edit2, Check, X, Box, User as UserIcon, Truck } from 'lucide-react';
+import {
+  ShoppingBag,
+  MapPin,
+  Edit2,
+  Check,
+  X,
+  Box,
+  User as UserIcon,
+  Truck,
+  FileText,
+  Download,
+  CalendarDays,
+  BadgeCheck,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +32,93 @@ const MyOrders = () => {
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationValue, setLocationValue] = useState('');
   const [currentLocation, setCurrentLocation] = useState('Location not provided');
+
+  const downloadReceipt = (order) => {
+    const purchaseDate = order.createdAt
+      ? new Date(order.createdAt).toLocaleString()
+      : 'Not available';
+    const deliveryDate = order.deliveredAt
+      ? new Date(order.deliveredAt).toLocaleString()
+      : 'Not delivered yet';
+    const issuedDate = order.receiptIssuedAt
+      ? new Date(order.receiptIssuedAt).toLocaleString()
+      : new Date().toLocaleString();
+
+    const receiptHtml = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Receipt ${order.receiptNumber || order.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 32px; color: #0f172a; }
+            .shell { max-width: 760px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; }
+            .head { padding: 24px; background: linear-gradient(135deg, #eef2ff, #fff7ed); }
+            .head h1 { margin: 0 0 8px; font-size: 28px; }
+            .head p { margin: 0; color: #475569; }
+            .body { padding: 24px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+            .card { padding: 16px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
+            .label { display: block; color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 6px; }
+            .value { font-size: 16px; font-weight: 700; }
+            .summary { padding: 18px; border-radius: 16px; background: #111827; color: #fff; }
+            .summary strong { font-size: 24px; }
+          </style>
+        </head>
+        <body>
+          <div class="shell">
+            <div class="head">
+              <h1>Digital Receipt</h1>
+              <p>Receipt No: ${order.receiptNumber || `ORDER-${order.id}`}</p>
+            </div>
+            <div class="body">
+              <div class="grid">
+                <div class="card">
+                  <span class="label">Product</span>
+                  <div class="value">${order.productName || 'Unknown Item'}</div>
+                </div>
+                <div class="card">
+                  <span class="label">Category</span>
+                  <div class="value">${order.productCategory || 'General'}</div>
+                </div>
+                <div class="card">
+                  <span class="label">Buyer</span>
+                  <div class="value">${order.buyerName || 'Unknown Buyer'}</div>
+                </div>
+                <div class="card">
+                  <span class="label">Seller</span>
+                  <div class="value">${order.sellerBusinessName || order.sellerName || 'Unknown Seller'}</div>
+                </div>
+                <div class="card">
+                  <span class="label">Purchased On</span>
+                  <div class="value">${purchaseDate}</div>
+                </div>
+                <div class="card">
+                  <span class="label">Delivered On</span>
+                  <div class="value">${deliveryDate}</div>
+                </div>
+              </div>
+              <div class="summary">
+                <span class="label" style="color:#cbd5e1;">Total Paid</span>
+                <strong>${formatNPR(order.price || 0)}</strong>
+                <p style="margin:10px 0 0;color:#cbd5e1;">Issued: ${issuedDate}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([receiptHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `receipt-${order.receiptNumber || order.id}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -152,8 +252,22 @@ const MyOrders = () => {
                   <span className="text-muted text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="order-body">
+                  <div className="order-media">
+                    {order.productImageUrl ? (
+                      <img src={order.productImageUrl} alt={order.productName || 'Product'} className="order-product-image" />
+                    ) : (
+                      <div className="order-product-image order-product-image--placeholder">
+                        <ShoppingBag size={28} />
+                      </div>
+                    )}
+                  </div>
                   <div className="order-details">
                     <h3 className="order-product-name">{order.productName || 'Unknown Item'}</h3>
+                    {order.productCategory && (
+                      <div className="order-chip-row">
+                        <span className="order-chip">{order.productCategory}</span>
+                      </div>
+                    )}
                     <div className="order-info-row mt-2">
                       <UserIcon size={16} />
                       <span>Seller: <b className="text-foreground">{order.sellerName || 'Unknown'}</b></span>
@@ -166,6 +280,32 @@ const MyOrders = () => {
                       <div className="order-info-row mt-1" style={{ color: '#4f46e5' }}>
                         <Truck size={16} />
                         <span>Courier: <b>{order.deliveryPersonName}</b></span>
+                      </div>
+                    )}
+                    {(order.receiptAvailable || order.receiptNumber) && (
+                      <div className="receipt-card">
+                        <div className="receipt-card-head">
+                          <div className="receipt-card-icon">
+                            <FileText size={18} />
+                          </div>
+                          <div>
+                            <strong>Digital receipt ready</strong>
+                            <p>Receipt #{order.receiptNumber}</p>
+                          </div>
+                        </div>
+                        <div className="receipt-grid">
+                          <div className="receipt-grid-item">
+                            <span><CalendarDays size={14} /> Purchased</span>
+                            <strong>{new Date(order.createdAt).toLocaleDateString()}</strong>
+                          </div>
+                          <div className="receipt-grid-item">
+                            <span><BadgeCheck size={14} /> Delivered</span>
+                            <strong>{order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString() : 'Recorded'}</strong>
+                          </div>
+                        </div>
+                        <button className="btn btn-outline receipt-download-btn" onClick={() => downloadReceipt(order)}>
+                          <Download size={16} /> Download receipt
+                        </button>
                       </div>
                     )}
                   </div>
@@ -202,8 +342,22 @@ const MyOrders = () => {
                   <span className="text-muted text-sm">{new Date(order.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="order-body">
+                  <div className="order-media">
+                    {order.productImageUrl ? (
+                      <img src={order.productImageUrl} alt={order.productName || 'Product'} className="order-product-image" />
+                    ) : (
+                      <div className="order-product-image order-product-image--placeholder">
+                        <Box size={28} />
+                      </div>
+                    )}
+                  </div>
                   <div className="order-details">
                     <h3 className="order-product-name">{order.productName || 'Unknown Item'}</h3>
+                    {order.productCategory && (
+                      <div className="order-chip-row">
+                        <span className="order-chip">{order.productCategory}</span>
+                      </div>
+                    )}
                     <div className="order-info-row mt-2">
                       <UserIcon size={16} />
                       <span>Sold to: <b className="text-foreground">{order.buyerName || 'Unknown'}</b></span>
