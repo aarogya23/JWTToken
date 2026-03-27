@@ -67,6 +67,7 @@ const Dashboard = () => {
       const sellerName = product.user?.fullName || 'Unknown seller';
       if (!sellerMap.has(sellerName)) {
         sellerMap.set(sellerName, {
+          id: product.user?.id,
           name: sellerName,
           profileImage: product.user?.profileImage || '',
         });
@@ -245,7 +246,9 @@ const Dashboard = () => {
                         )}
                       </div>
                       <div>
-                        <strong>{product.user?.fullName || 'Unknown seller'}</strong>
+                        <Link to={`/owners/${product.user?.id}`} className="creator-inline-link">
+                          <strong>{product.user?.fullName || 'Unknown seller'}</strong>
+                        </Link>
                         <span>
                           Drop #{index + 1} in your marketplace feed
                         </span>
@@ -337,7 +340,9 @@ const Dashboard = () => {
                         )}
                       </div>
                       <div>
-                        <strong>{seller.name}</strong>
+                        <Link to={`/owners/${seller.id}`} className="creator-inline-link">
+                          <strong>{seller.name}</strong>
+                        </Link>
                         <span>{index + 2} new viewers this hour</span>
                       </div>
                     </div>

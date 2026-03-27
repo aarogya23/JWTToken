@@ -45,7 +45,7 @@ public class OrderService {
 
         Order order = Order.builder()
                 .buyer(buyer)
-                .seller(product.getUser())
+                .sellerId(product.getUser().getId())
                 .product(product)
                 .price(product.getPrice())
                 .productNameSnapshot(product.getName())
@@ -84,7 +84,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if (!order.getSeller().getId().equals(seller.getId())) {
+        if (!order.getSellerId().equals(seller.getId())) {
             throw new RuntimeException("Only the seller can update the order status");
         }
 
@@ -164,7 +164,7 @@ public class OrderService {
             throw new RuntimeException("Order has already been accepted by another driver.");
         }
 
-        if (order.getBuyer().getId().equals(courier.getId()) || order.getSeller().getId().equals(courier.getId())) {
+        if (order.getBuyer().getId().equals(courier.getId()) || order.getSellerId().equals(courier.getId())) {
              // Let them deliver their own if they really want, but usually block. Let's allow it for simplicity of gig economy or block?
              // Actually buyers can pick up their own items. Let's block sellers delivering their own items if they use gig economy?
              // No reason to block. Let them do whatever.
@@ -197,9 +197,12 @@ public class OrderService {
     private void refreshOrderSnapshot(Order order) {
         order.setBuyerNameSnapshot(resolveUserName(order.getBuyer()));
         order.setBuyerLocationSnapshot(resolveLocation(order.getBuyer()));
-        order.setSellerNameSnapshot(resolveUserName(order.getSeller()));
-        order.setSellerBusinessNameSnapshot(order.getSeller().getBusinessName());
-        order.setSellerLocationSnapshot(resolveLocation(order.getSeller()));
+        if (order.getProduct() != null && order.getProduct().getUser() != null) {
+            order.setSellerId(order.getProduct().getUser().getId());
+            order.setSellerNameSnapshot(resolveUserName(order.getProduct().getUser()));
+            order.setSellerBusinessNameSnapshot(order.getProduct().getUser().getBusinessName());
+            order.setSellerLocationSnapshot(resolveLocation(order.getProduct().getUser()));
+        }
 
         if (order.getProduct() != null) {
             order.setProductNameSnapshot(order.getProduct().getName());
@@ -248,13 +251,13 @@ public class OrderService {
                 : resolveUserName(order.getBuyer());
         String sellerName = order.getSellerNameSnapshot() != null && !order.getSellerNameSnapshot().isBlank()
                 ? order.getSellerNameSnapshot()
-                : resolveUserName(order.getSeller());
+                : "Unknown Seller";
         String buyerLocation = order.getBuyerLocationSnapshot() != null && !order.getBuyerLocationSnapshot().isBlank()
                 ? order.getBuyerLocationSnapshot()
                 : resolveLocation(order.getBuyer());
         String sellerLocation = order.getSellerLocationSnapshot() != null && !order.getSellerLocationSnapshot().isBlank()
                 ? order.getSellerLocationSnapshot()
-                : resolveLocation(order.getSeller());
+                : "Location not provided";
         String productName = order.getProductNameSnapshot() != null && !order.getProductNameSnapshot().isBlank()
                 ? order.getProductNameSnapshot()
                 : order.getProduct() != null ? order.getProduct().getName() : "Unknown Item";
@@ -263,12 +266,12 @@ public class OrderService {
                 .id(order.getId())
                 .buyerId(order.getBuyer().getId())
                 .buyerName(buyerName)
-                .sellerId(order.getSeller().getId())
+                .sellerId(order.getSellerId())
                 .sellerName(sellerName)
                 .sellerBusinessName(
                         order.getSellerBusinessNameSnapshot() != null && !order.getSellerBusinessNameSnapshot().isBlank()
                                 ? order.getSellerBusinessNameSnapshot()
-                                : order.getSeller().getBusinessName()
+                                : null
                 )
                 .buyerLocation(buyerLocation)
                 .sellerLocation(sellerLocation)

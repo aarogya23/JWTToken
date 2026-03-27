@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { User as UserIcon, Camera, Save, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css'; // Reuse some standard card CSS
@@ -125,6 +126,11 @@ const Profile = () => {
           </div>
           <h2>My Profile</h2>
           <p className="text-muted">Manage your public information</p>
+          {user?.id ? (
+            <Link to={`/owners/${user.id}`} className="btn btn-outline mt-4">
+              Open my owner page
+            </Link>
+          ) : null}
         </div>
 
         <div className="card-body border-t">

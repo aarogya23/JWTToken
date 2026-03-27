@@ -15,6 +15,7 @@ import GroupChat from './pages/GroupChat';
 import DeliveryDashboard from './pages/DeliveryDashboard';
 import ServicesPage from './pages/ServicesPage';
 import RetailInventoryPage from './pages/RetailInventoryPage';
+import CreatorPage from './pages/CreatorPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ function App() {
         <Route path="/delivery-jobs" element={<ProtectedRoute><DeliveryDashboard /></ProtectedRoute>} />
         <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
         <Route path="/retail-inventory" element={<ProtectedRoute><RetailInventoryPage /></ProtectedRoute>} />
+        <Route path="/owners/:userId" element={<ProtectedRoute><CreatorPage /></ProtectedRoute>} />
 
         
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

@@ -27,9 +27,7 @@ public class Order {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    private User seller;
+    private Integer sellerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delivery_person_id")

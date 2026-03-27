@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Building2,
@@ -197,7 +197,9 @@ const ProductDetails = () => {
                 )}
               </div>
               <div>
-                <strong>{product.user?.fullName || 'Unknown seller'}</strong>
+                <Link to={`/owners/${product.user?.id}`} className="creator-inline-link">
+                  <strong>{product.user?.fullName || 'Unknown seller'}</strong>
+                </Link>
                 <p>{product.user?.businessName || 'Independent retailer'}</p>
               </div>
             </div>
