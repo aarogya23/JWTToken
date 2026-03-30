@@ -240,6 +240,11 @@
   gap: 12px;
 }
 
+.product-detail-payment-options {
+  display: grid;
+  gap: 12px;
+}
+
 .product-detail-buy {
   width: 100%;
   min-height: 58px;
@@ -249,6 +254,16 @@
   gap: 10px;
   border-radius: 18px;
   font-size: 1rem;
+}
+
+.esewa-pay-btn {
+  border-color: #16a34a;
+  color: #166534;
+  background: rgba(240, 253, 244, 0.95);
+}
+
+.esewa-pay-btn:hover:not(:disabled) {
+  background: #dcfce7;
 }
 
 .product-detail-banner {

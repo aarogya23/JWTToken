@@ -3,6 +3,8 @@ package com.project.JWTToken.Service;
 import com.project.JWTToken.dtos.OrderDto;
 import com.project.JWTToken.model.Order;
 import com.project.JWTToken.model.OrderStatus;
+import com.project.JWTToken.model.PaymentMethod;
+import com.project.JWTToken.model.PaymentStatus;
 import com.project.JWTToken.model.Product;
 import com.project.JWTToken.model.User;
 import com.project.JWTToken.repository.OrderRepository;
@@ -30,6 +32,142 @@ public class OrderService {
 
     @Transactional
     public OrderDto buyProduct(Integer productId, User buyerParams) {
+        Order savedOrder = createOrder(productId, buyerParams, PaymentMethod.CASH_ON_DELIVERY, null);
+        return mapToDto(savedOrder);
+    }
+
+    @Transactional
+    public Order createEsewaOrder(Integer productId, User buyerParams, String transactionUuid) {
+        return createOrder(productId, buyerParams, PaymentMethod.ESEWA, transactionUuid);
+    }
+
+    public List<OrderDto> getBuyerOrders(User buyer) {
+        return orderRepository.findByBuyerId(buyer.getId()).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderDto> getSellerOrders(User seller) {
+        return orderRepository.findBySellerId(seller.getId()).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrderDto updateOrderStatus(Integer orderId, OrderStatus newStatus, User seller) {
+        Order order = requireOrder(orderId);
+
+        if (!order.getSellerId().equals(seller.getId())) {
+            throw new RuntimeException("Only the seller can update the order status");
+        }
+
+        order.setStatus(newStatus);
+        refreshOrderSnapshot(order);
+        if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) {
+            finalizeReceiptAndArchiveProduct(order);
+        }
+        return mapToDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderDto confirmOrderPayment(Integer orderId, User buyer) {
+        Order order = requireOrder(orderId);
+
+        if (!order.getBuyer().getId().equals(buyer.getId())) {
+            throw new RuntimeException("Only the buyer can confirm payment");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setPaymentVerifiedAt(LocalDateTime.now());
+        refreshOrderSnapshot(order);
+        finalizeReceiptAndArchiveProduct(order);
+        return mapToDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void cancelOrderPayment(Integer orderId, User buyer) {
+        Order order = requireOrder(orderId);
+
+        if (!order.getBuyer().getId().equals(buyer.getId())) {
+            throw new RuntimeException("Only the buyer can cancel the order");
+        }
+
+        markOrderCancelled(order, PaymentStatus.CANCELLED);
+    }
+
+    public List<OrderDto> getAvailableDeliveries() {
+        return orderRepository.findByStatusIn(List.of(OrderStatus.PENDING, OrderStatus.READY_FOR_PICKUP))
+                .stream()
+                .filter(o -> o.getDeliveryPerson() == null)
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderDto> getMyDeliveries(User courier) {
+        return orderRepository.findByDeliveryPersonId(courier.getId())
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrderDto acceptDelivery(Integer orderId, User courierParams) {
+        User courier = userRepository.findById(courierParams.getId())
+                .orElseThrow(() -> new RuntimeException("Courier not found"));
+
+        Order order = requireOrder(orderId);
+        if (order.getDeliveryPerson() != null) {
+            throw new RuntimeException("Order has already been accepted by another driver.");
+        }
+
+        order.setDeliveryPerson(courier);
+        order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
+        return mapToDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderDto updateDeliveryStatus(Integer orderId, OrderStatus newStatus, User courierParams) {
+        Order order = requireOrder(orderId);
+
+        if (order.getDeliveryPerson() == null || !order.getDeliveryPerson().getId().equals(courierParams.getId())) {
+            throw new RuntimeException("You are not authorized to update this delivery.");
+        }
+
+        order.setStatus(newStatus);
+        refreshOrderSnapshot(order);
+        if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) {
+            finalizeReceiptAndArchiveProduct(order);
+        }
+        return mapToDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderDto markEsewaPaymentComplete(Integer orderId, String refId) {
+        Order order = requireOrder(orderId);
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setPaymentReferenceId(refId);
+        order.setPaymentVerifiedAt(LocalDateTime.now());
+        order.setStatus(OrderStatus.PENDING);
+        refreshOrderSnapshot(order);
+        return mapToDto(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void markEsewaPaymentFailed(Integer orderId) {
+        Order order = requireOrder(orderId);
+        markOrderCancelled(order, PaymentStatus.FAILED);
+    }
+
+    public OrderDto getOrderById(Integer orderId, User currentUser) {
+        Order order = requireOrder(orderId);
+        if (!order.getBuyer().getId().equals(currentUser.getId()) && !order.getSellerId().equals(currentUser.getId())) {
+            throw new RuntimeException("Not authorized to view this order");
+        }
+        return mapToDto(order);
+    }
+
+    private Order createOrder(Integer productId, User buyerParams, PaymentMethod paymentMethod, String transactionUuid) {
         User buyer = userRepository.findById(buyerParams.getId())
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
         Product product = productRepository.findById(productId)
@@ -38,7 +176,6 @@ public class OrderService {
         if (product.isSold()) {
             throw new RuntimeException("Product is already sold");
         }
-
         if (product.getUser().getId().equals(buyer.getId())) {
             throw new RuntimeException("You cannot buy your own product");
         }
@@ -58,77 +195,23 @@ public class OrderService {
                 .buyerNameSnapshot(resolveUserName(buyer))
                 .buyerLocationSnapshot(resolveLocation(buyer))
                 .status(OrderStatus.PENDING)
+                .paymentMethod(paymentMethod)
+                .paymentStatus(paymentMethod == PaymentMethod.ESEWA ? PaymentStatus.INITIATED : PaymentStatus.UNPAID)
+                .paymentTransactionUuid(transactionUuid)
+                .paymentGateway(paymentMethod == PaymentMethod.ESEWA ? "ESEWA" : "COD")
+                .paymentInitiatedAt(paymentMethod == PaymentMethod.ESEWA ? LocalDateTime.now() : null)
                 .build();
 
         product.setSold(true);
         productRepository.save(product);
-        Order savedOrder = orderRepository.save(order);
-
-        return mapToDto(savedOrder);
+        return orderRepository.save(order);
     }
 
-    public List<OrderDto> getBuyerOrders(User buyer) {
-        return orderRepository.findByBuyerId(buyer.getId()).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    public List<OrderDto> getSellerOrders(User seller) {
-        return orderRepository.findBySellerId(seller.getId()).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public OrderDto updateOrderStatus(Integer orderId, OrderStatus newStatus, User seller) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (!order.getSellerId().equals(seller.getId())) {
-            throw new RuntimeException("Only the seller can update the order status");
-        }
-
-        order.setStatus(newStatus);
-        refreshOrderSnapshot(order);
-        if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) {
-            finalizeReceiptAndArchiveProduct(order);
-        }
-        Order updatedOrder = orderRepository.save(order);
-        
-        return mapToDto(updatedOrder);
-    }
-
-    @Transactional
-    public OrderDto confirmOrderPayment(Integer orderId, User buyer) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (!order.getBuyer().getId().equals(buyer.getId())) {
-             // Admin or someone else... but let's just make sure it's the buyer
-             throw new RuntimeException("Only the buyer can confirm payment");
-        }
-
-        order.setStatus(OrderStatus.COMPLETED);
-        refreshOrderSnapshot(order);
-        finalizeReceiptAndArchiveProduct(order);
-        Order updatedOrder = orderRepository.save(order);
-        
-        return mapToDto(updatedOrder);
-    }
-
-    @Transactional
-    public void cancelOrderPayment(Integer orderId, User buyer) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (!order.getBuyer().getId().equals(buyer.getId())) {
-             throw new RuntimeException("Only the buyer can cancel the order");
-        }
-
+    private void markOrderCancelled(Order order, PaymentStatus paymentStatus) {
         order.setStatus(OrderStatus.CANCELLED);
+        order.setPaymentStatus(paymentStatus);
         orderRepository.save(order);
 
-        // Restock product
         Product product = order.getProduct();
         if (product != null) {
             product.setSold(false);
@@ -136,62 +219,9 @@ public class OrderService {
         }
     }
 
-    public List<OrderDto> getAvailableDeliveries() {
-        // Find orders that need a driver. Pending or ready.
-        return orderRepository.findByStatusIn(List.of(OrderStatus.PENDING, OrderStatus.READY_FOR_PICKUP))
-                .stream()
-                .filter(o -> o.getDeliveryPerson() == null)
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    public List<OrderDto> getMyDeliveries(User courier) {
-        return orderRepository.findByDeliveryPersonId(courier.getId())
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public OrderDto acceptDelivery(Integer orderId, User courierParams) {
-        User courier = userRepository.findById(courierParams.getId())
-                .orElseThrow(() -> new RuntimeException("Courier not found"));
-        
-        Order order = orderRepository.findById(orderId)
+    private Order requireOrder(Integer orderId) {
+        return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getDeliveryPerson() != null) {
-            throw new RuntimeException("Order has already been accepted by another driver.");
-        }
-
-        if (order.getBuyer().getId().equals(courier.getId()) || order.getSellerId().equals(courier.getId())) {
-             // Let them deliver their own if they really want, but usually block. Let's allow it for simplicity of gig economy or block?
-             // Actually buyers can pick up their own items. Let's block sellers delivering their own items if they use gig economy?
-             // No reason to block. Let them do whatever.
-        }
-
-        order.setDeliveryPerson(courier);
-        order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
-        Order updated = orderRepository.save(order);
-        return mapToDto(updated);
-    }
-
-    @Transactional
-    public OrderDto updateDeliveryStatus(Integer orderId, OrderStatus newStatus, User courierParams) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getDeliveryPerson() == null || !order.getDeliveryPerson().getId().equals(courierParams.getId())) {
-            throw new RuntimeException("You are not authorized to update this delivery.");
-        }
-
-        order.setStatus(newStatus);
-        refreshOrderSnapshot(order);
-        if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.COMPLETED) {
-            finalizeReceiptAndArchiveProduct(order);
-        }
-        Order updated = orderRepository.save(order);
-        return mapToDto(updated);
     }
 
     private void refreshOrderSnapshot(Order order) {
@@ -216,11 +246,9 @@ public class OrderService {
         if (order.getDeliveredAt() == null) {
             order.setDeliveredAt(LocalDateTime.now());
         }
-
         if (order.getReceiptNumber() == null || order.getReceiptNumber().isBlank()) {
             order.setReceiptNumber("RCPT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
-
         order.setReceiptIssuedAt(LocalDateTime.now());
 
         if (order.getProduct() != null) {
@@ -268,11 +296,7 @@ public class OrderService {
                 .buyerName(buyerName)
                 .sellerId(order.getSellerId())
                 .sellerName(sellerName)
-                .sellerBusinessName(
-                        order.getSellerBusinessNameSnapshot() != null && !order.getSellerBusinessNameSnapshot().isBlank()
-                                ? order.getSellerBusinessNameSnapshot()
-                                : null
-                )
+                .sellerBusinessName(order.getSellerBusinessNameSnapshot())
                 .buyerLocation(buyerLocation)
                 .sellerLocation(sellerLocation)
                 .deliveryPersonId(order.getDeliveryPerson() != null ? order.getDeliveryPerson().getId() : null)
@@ -284,6 +308,10 @@ public class OrderService {
                 .productCategory(order.getProductCategorySnapshot())
                 .price(order.getPrice())
                 .status(order.getStatus().name())
+                .paymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod().name() : null)
+                .paymentStatus(order.getPaymentStatus() != null ? order.getPaymentStatus().name() : null)
+                .paymentTransactionUuid(order.getPaymentTransactionUuid())
+                .paymentReferenceId(order.getPaymentReferenceId())
                 .receiptNumber(order.getReceiptNumber())
                 .receiptAvailable(order.getReceiptNumber() != null && !order.getReceiptNumber().isBlank())
                 .deliveredAt(order.getDeliveredAt())

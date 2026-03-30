@@ -16,6 +16,8 @@ import DeliveryDashboard from './pages/DeliveryDashboard';
 import ServicesPage from './pages/ServicesPage';
 import RetailInventoryPage from './pages/RetailInventoryPage';
 import CreatorPage from './pages/CreatorPage';
+import EsewaSuccessPage from './pages/EsewaSuccessPage';
+import EsewaFailurePage from './pages/EsewaFailurePage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -38,6 +40,8 @@ function App() {
         {/* Protected Routes */}
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/products/:id" element={<ProtectedRoute><ProductDetails /></ProtectedRoute>} />
+        <Route path="/payments/esewa/success" element={<ProtectedRoute><EsewaSuccessPage /></ProtectedRoute>} />
+        <Route path="/payments/esewa/failure" element={<ProtectedRoute><EsewaFailurePage /></ProtectedRoute>} />
         <Route path="/create-product" element={<ProtectedRoute><CreateProduct /></ProtectedRoute>} />
         <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
         <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />

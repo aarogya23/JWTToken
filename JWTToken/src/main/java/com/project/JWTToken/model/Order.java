@@ -67,6 +67,25 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentMethod paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
+
+    @Column(unique = true)
+    private String paymentTransactionUuid;
+
+    private String paymentReferenceId;
+
+    private String paymentGateway;
+
+    private LocalDateTime paymentInitiatedAt;
+
+    private LocalDateTime paymentVerifiedAt;
+
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;

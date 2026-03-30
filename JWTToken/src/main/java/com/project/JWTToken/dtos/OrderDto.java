@@ -28,6 +28,10 @@ public class OrderDto {
     private String productCategory;
     private Double price;
     private String status;
+    private String paymentMethod;
+    private String paymentStatus;
+    private String paymentTransactionUuid;
+    private String paymentReferenceId;
     private String receiptNumber;
     private Boolean receiptAvailable;
     private LocalDateTime deliveredAt;

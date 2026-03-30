@@ -24,6 +24,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [buying, setBuying] = useState(false);
+  const [payingEsewa, setPayingEsewa] = useState(false);
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
 
@@ -56,6 +57,32 @@ const ProductDetails = () => {
       console.error(err);
     } finally {
       setBuying(false);
+    }
+  };
+
+  const handleEsewaPay = async () => {
+    if (!window.confirm('Continue to eSewa sandbox for this payment?')) return;
+
+    setPayingEsewa(true);
+    try {
+      const response = await api.post(`/api/orders/${id}/esewa/initiate`);
+      const { action, fields } = response.data;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = action;
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to start eSewa payment');
+      console.error(err);
+      setPayingEsewa(false);
     }
   };
 
@@ -206,14 +233,24 @@ const ProductDetails = () => {
 
             <div className="product-detail-cta">
               {!isOwner && !product.sold ? (
-                <button
-                  className="btn btn-primary product-detail-buy"
-                  onClick={handleBuy}
-                  disabled={buying}
-                >
-                  <ShoppingCart size={20} />
-                  {buying ? 'Processing...' : 'Buy Now'}
-                </button>
+                <div className="product-detail-payment-options">
+                  <button
+                    className="btn btn-primary product-detail-buy"
+                    onClick={handleBuy}
+                    disabled={buying || payingEsewa}
+                  >
+                    <ShoppingCart size={20} />
+                    {buying ? 'Processing...' : 'Buy with COD'}
+                  </button>
+                  <button
+                    className="btn btn-outline product-detail-buy esewa-pay-btn"
+                    onClick={handleEsewaPay}
+                    disabled={buying || payingEsewa}
+                  >
+                    <ShoppingCart size={20} />
+                    {payingEsewa ? 'Redirecting...' : 'Pay with eSewa'}
+                  </button>
+                </div>
               ) : isOwner ? (
                 <div className="product-detail-banner muted">
                   This is your own listing.

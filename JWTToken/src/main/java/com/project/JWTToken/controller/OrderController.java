@@ -1,6 +1,9 @@
 package com.project.JWTToken.controller;
 
 import com.project.JWTToken.Service.OrderService;
+import com.project.JWTToken.Service.EsewaPaymentService;
+import com.project.JWTToken.dtos.EsewaInitiationResponse;
+import com.project.JWTToken.dtos.EsewaVerificationRequest;
 import com.project.JWTToken.dtos.OrderDto;
 import com.project.JWTToken.model.OrderStatus;
 import com.project.JWTToken.model.User;
@@ -16,9 +19,11 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final EsewaPaymentService esewaPaymentService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, EsewaPaymentService esewaPaymentService) {
         this.orderService = orderService;
+        this.esewaPaymentService = esewaPaymentService;
     }
 
     @PostMapping("/{productId}")
@@ -35,6 +40,51 @@ public class OrderController {
             // Return exactly what went wrong so we see it on the frontend alert
             return ResponseEntity.status(500).body(Map.of("message", "Backend Crash: " + msg));
         }
+    }
+
+    @PostMapping("/{productId}/esewa/initiate")
+    public ResponseEntity<?> initiateEsewaPayment(
+            @PathVariable("productId") Integer productId,
+            Authentication authentication) {
+        try {
+            User currentUser = (User) authentication.getPrincipal();
+            return ResponseEntity.ok(esewaPaymentService.initiate(productId, currentUser));
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+            return ResponseEntity.status(500).body(Map.of("message", "eSewa initiate failed: " + msg));
+        }
+    }
+
+    @PostMapping("/esewa/verify")
+    public ResponseEntity<?> verifyEsewaPayment(
+            @RequestBody EsewaVerificationRequest request,
+            Authentication authentication) {
+        try {
+            User currentUser = (User) authentication.getPrincipal();
+            return ResponseEntity.ok(esewaPaymentService.verify(request.getOrderId(), request.getData(), currentUser));
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+            return ResponseEntity.status(500).body(Map.of("message", "eSewa verify failed: " + msg));
+        }
+    }
+
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable("orderId") Integer orderId,
+            Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        orderService.cancelOrderPayment(orderId, currentUser);
+        return ResponseEntity.ok(Map.of("status", "cancelled"));
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDto> getOrder(
+            @PathVariable("orderId") Integer orderId,
+            Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(orderService.getOrderById(orderId, currentUser));
     }
 
     @GetMapping("/purchases")

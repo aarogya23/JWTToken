@@ -319,9 +319,17 @@ const MyOrders = () => {
 
                   <div className="order-price-container mt-4">
                     <p className="order-price">{formatNPR(order.price || 0)}</p>
-                    <span className={`order-status ${order.status === 'PENDING' ? 'status-pending' : 'status-completed'}`}>
-                      {order.status || 'PROCESSING'}
-                    </span>
+                    <div className="order-chip-row">
+                      <span className={`order-status ${order.status === 'PENDING' ? 'status-pending' : 'status-completed'}`}>
+                        {order.status || 'PROCESSING'}
+                      </span>
+                      {order.paymentMethod && (
+                        <span className="order-chip">{order.paymentMethod.replaceAll('_', ' ')}</span>
+                      )}
+                      {order.paymentStatus && (
+                        <span className="order-chip">{order.paymentStatus.replaceAll('_', ' ')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -375,9 +383,14 @@ const MyOrders = () => {
                   </div>
                   <div className="order-price-container">
                     <p className="order-price">{formatNPR(order.price || 0)}</p>
-                    <span className="order-status status-pending" style={{ backgroundColor: '#2563eb', color: 'white' }}>
-                      CASH ON DELIVERY
-                    </span>
+                    <div className="order-chip-row">
+                      <span className="order-status status-pending" style={{ backgroundColor: '#2563eb', color: 'white' }}>
+                        {order.paymentMethod ? order.paymentMethod.replaceAll('_', ' ') : 'CASH ON DELIVERY'}
+                      </span>
+                      {order.paymentStatus && (
+                        <span className="order-chip">{order.paymentStatus.replaceAll('_', ' ')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
