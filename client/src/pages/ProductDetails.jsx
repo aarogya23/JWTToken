@@ -101,6 +101,8 @@ const ProductDetails = () => {
   if (!product) return <div className="text-center mt-8">Product not found</div>;
 
   const isOwner = user && product.user && user.email === product.user.email;
+  const stockQuantity = Number(product.stockQuantity || 0);
+  const isOutOfStock = stockQuantity <= 0 || product.sold;
 
   return (
     <div className="product-detail-page">
@@ -175,7 +177,9 @@ const ProductDetails = () => {
                 <PackageCheck size={18} />
                 <div>
                   <strong>Stock</strong>
-                  <span>{product.stockQuantity || 0} units ready</span>
+                  <span>
+                    {isOutOfStock ? 'Out of stock' : `${stockQuantity} units ready`}
+                  </span>
                 </div>
               </div>
               <div className="product-detail-meta-card">
@@ -232,7 +236,7 @@ const ProductDetails = () => {
             </div>
 
             <div className="product-detail-cta">
-              {!isOwner && !product.sold ? (
+              {!isOwner && !isOutOfStock ? (
                 <div className="product-detail-payment-options">
                   <button
                     className="btn btn-primary product-detail-buy"
@@ -257,7 +261,7 @@ const ProductDetails = () => {
                 </div>
               ) : (
                 <div className="product-detail-banner danger">
-                  This item has already been sold.
+                  This item is currently out of stock.
                 </div>
               )}
             </div>

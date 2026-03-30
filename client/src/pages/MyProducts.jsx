@@ -58,10 +58,10 @@ const MyProducts = () => {
   };
 
   const stats = useMemo(() => {
-    const active = products.filter((product) => !product.sold);
-    const sold = products.filter((product) => product.sold);
+    const active = products.filter((product) => Number(product.stockQuantity || 0) > 0 && !product.sold);
+    const sold = products.filter((product) => Number(product.stockQuantity || 0) <= 0 || product.sold);
     const totalValue = active.reduce(
-      (sum, product) => sum + Number(product.price || 0),
+      (sum, product) => sum + Number(product.price || 0) * Number(product.stockQuantity || 0),
       0,
     );
 
@@ -102,7 +102,7 @@ const MyProducts = () => {
           <strong>{stats.active}</strong>
         </div>
         <div className="inventory-stat-card">
-          <span>Sold items</span>
+          <span>Out of stock</span>
           <strong>{stats.sold}</strong>
         </div>
         <div className="inventory-stat-card">
@@ -126,6 +126,11 @@ const MyProducts = () => {
         <section className="inventory-grid">
           {products.map((product) => (
             <article key={product.id} className="inventory-card">
+              {(() => {
+                const stockQuantity = Number(product.stockQuantity || 0);
+                const isOutOfStock = stockQuantity <= 0 || product.sold;
+                return (
+                  <>
               <div className="inventory-card-media">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} />
@@ -138,8 +143,8 @@ const MyProducts = () => {
 
               <div className="inventory-card-body">
                 <div className="inventory-card-topline">
-                  <span className={`inventory-badge ${product.sold ? 'sold' : 'active'}`}>
-                    {product.sold ? 'Sold' : 'Active'}
+                  <span className={`inventory-badge ${isOutOfStock ? 'sold' : 'active'}`}>
+                    {isOutOfStock ? 'Out of stock' : 'In stock'}
                   </span>
                   <span className="inventory-owner">
                     {user?.profileImage ? (
@@ -162,7 +167,7 @@ const MyProducts = () => {
                     MOQ {product.minimumOrderQuantity || 1}
                   </span>
                   <span className="inventory-moq">
-                    Stock {product.stockQuantity || 0}
+                    Stock {stockQuantity}
                   </span>
                 </div>
 
@@ -183,7 +188,7 @@ const MyProducts = () => {
                 <div className="inventory-status-row">
                   <span>
                     <AlertCircle size={15} />
-                    {product.sold ? 'Already completed sale' : 'Visible in marketplace'}
+                    {isOutOfStock ? 'Hidden from marketplace until you restock it' : 'Visible in marketplace'}
                   </span>
                 </div>
               </div>
@@ -195,11 +200,14 @@ const MyProducts = () => {
                 <button
                   className="btn btn-danger inventory-btn"
                   onClick={() => handleDelete(product.id)}
-                  disabled={product.sold}
+                  disabled={isOutOfStock}
                 >
                   <Trash2 size={16} /> Delete
                 </button>
               </div>
+                  </>
+                );
+              })()}
             </article>
           ))}
         </section>

@@ -3,7 +3,7 @@ import { apiFetch } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import s from './shared.module.css';
 
-const emptyForm = { name: '', description: '', price: '' };
+const emptyForm = { name: '', description: '', price: '', stockQuantity: '1' };
 
 function sellerLabel(p) {
   return p.user?.fullName || p.user?.email || 'Member';
@@ -45,6 +45,7 @@ export default function ProductsPage() {
       name: form.name,
       description: form.description || '',
       price: Number(form.price),
+      stockQuantity: Number(form.stockQuantity || 0),
     };
     try {
       if (editingId != null) {
@@ -69,6 +70,7 @@ export default function ProductsPage() {
       name: p.name || '',
       description: p.description || '',
       price: p.price != null ? String(p.price) : '',
+      stockQuantity: p.stockQuantity != null ? String(p.stockQuantity) : '0',
     });
   }
 
@@ -114,6 +116,7 @@ export default function ProductsPage() {
               <div className={s.marketPrice}>
                 {p.price != null ? `$${Number(p.price).toFixed(2)}` : '—'}
               </div>
+              <div className={s.marketSeller}>Stock: {Number(p.stockQuantity || 0)}</div>
               {p.description ? <p className={s.marketDesc}>{p.description}</p> : null}
               <div className={s.marketSeller}>
                 Seller: {sellerLabel(p)}
@@ -147,6 +150,16 @@ export default function ProductsPage() {
               required
             />
           </div>
+          <div className={s.field} style={{ flex: '1 1 100px' }}>
+            <label>Stock</label>
+            <input
+              type="number"
+              min="0"
+              value={form.stockQuantity}
+              onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
+              required
+            />
+          </div>
         </div>
         <div className={s.field}>
           <label>Description</label>
@@ -177,13 +190,14 @@ export default function ProductsPage() {
             <th>Name</th>
             <th>Price</th>
             <th>Description</th>
+            <th>Stock</th>
             <th />
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={4} className={s.muted}>
+              <td colSpan={5} className={s.muted}>
                 You have not listed any products yet.
               </td>
             </tr>
@@ -193,6 +207,7 @@ export default function ProductsPage() {
                 <td>{p.name}</td>
                 <td>{p.price}</td>
                 <td>{p.description}</td>
+                <td>{Number(p.stockQuantity || 0)}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button
                     type="button"

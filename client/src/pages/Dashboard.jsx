@@ -254,7 +254,9 @@ const Dashboard = () => {
                         </span>
                       </div>
                     </div>
-                    <span className="social-feed-tag">For sale</span>
+                    <span className="social-feed-tag">
+                      {Number(product.stockQuantity || 0) > 0 && !product.sold ? 'For sale' : 'Out of stock'}
+                    </span>
                   </div>
 
                   <Link to={`/products/${product.id}`} className="social-feed-cover">
@@ -275,6 +277,9 @@ const Dashboard = () => {
                         <div className="social-feed-market-meta">
                           <span className="social-feed-tag secondary">
                             {product.targetMarket || 'B2C'}
+                          </span>
+                          <span>
+                            Stock {Number(product.stockQuantity || 0)}
                           </span>
                           {product.minimumOrderQuantity ? (
                             <span>MOQ {product.minimumOrderQuantity}</span>
