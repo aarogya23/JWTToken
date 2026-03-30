@@ -15,6 +15,7 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public Product createProduct(Product product) {
+        normalizeInventoryState(product);
         return productRepository.save(product);
     }
 
@@ -55,6 +56,7 @@ public class ProductService {
             }
             product.setMinimumOrderQuantity(updatedProduct.getMinimumOrderQuantity());
             product.setLogisticsSupport(updatedProduct.getLogisticsSupport());
+            normalizeInventoryState(product);
             return productRepository.save(product);
         }
         return null;
@@ -67,5 +69,14 @@ public class ProductService {
             return true;
         }
         return false;
+    }
+
+    private void normalizeInventoryState(Product product) {
+        int stockQuantity = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
+        if (stockQuantity < 0) {
+            stockQuantity = 0;
+        }
+        product.setStockQuantity(stockQuantity);
+        product.setSold(stockQuantity <= 0);
     }
 }

@@ -173,8 +173,9 @@ public class OrderService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (product.isSold()) {
-            throw new RuntimeException("Product is already sold");
+        Integer currentStock = product.getStockQuantity() == null ? 0 : product.getStockQuantity();
+        if (product.isSold() || currentStock <= 0) {
+            throw new RuntimeException("Product is out of stock");
         }
         if (product.getUser().getId().equals(buyer.getId())) {
             throw new RuntimeException("You cannot buy your own product");
@@ -202,7 +203,9 @@ public class OrderService {
                 .paymentInitiatedAt(paymentMethod == PaymentMethod.ESEWA ? LocalDateTime.now() : null)
                 .build();
 
-        product.setSold(true);
+        int remainingStock = currentStock - 1;
+        product.setStockQuantity(remainingStock);
+        product.setSold(remainingStock <= 0);
         productRepository.save(product);
         return orderRepository.save(order);
     }
@@ -214,7 +217,9 @@ public class OrderService {
 
         Product product = order.getProduct();
         if (product != null) {
-            product.setSold(false);
+            int restoredStock = (product.getStockQuantity() == null ? 0 : product.getStockQuantity()) + 1;
+            product.setStockQuantity(restoredStock);
+            product.setSold(restoredStock <= 0);
             productRepository.save(product);
         }
     }
@@ -253,9 +258,8 @@ public class OrderService {
 
         if (order.getProduct() != null) {
             Product deliveredProduct = order.getProduct();
-            order.setProduct(null);
-            orderRepository.save(order);
-            productRepository.delete(deliveredProduct);
+            deliveredProduct.setSold((deliveredProduct.getStockQuantity() == null ? 0 : deliveredProduct.getStockQuantity()) <= 0);
+            productRepository.save(deliveredProduct);
         }
     }
 
