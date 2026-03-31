@@ -4,7 +4,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { X, Navigation, Package, MapPin, AlertCircle, Loader2 } from 'lucide-react';
 import './FullScreenDeliveryMap.css';
-import { createDijkstraRoute } from '../utils/dijkstraRoute';
 
 // Custom icons for map markers
 const driverIcon = new L.Icon({
@@ -49,6 +48,7 @@ function MapBoundsController({ markers }) {
 const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
+  const [routeLegs, setRouteLegs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -95,68 +95,101 @@ const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
     fetchCoordinates();
   }, [job]);
 
+  useEffect(() => {
+    const buildRoadRoutes = async () => {
+      const nextLegs = [];
+
+      const fetchRoadRoute = async (start, end, meta) => {
+        if (!start || !end) {
+          return null;
+        }
+
+        const [startLat, startLng] = start;
+        const [endLat, endLng] = end;
+        const url =
+          `https://router.project-osrm.org/route/v1/driving/` +
+          `${startLng},${startLat};${endLng},${endLat}` +
+          `?overview=full&geometries=geojson&steps=true`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Routing request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const bestRoute = data.routes?.[0];
+        if (!bestRoute?.geometry?.coordinates?.length) {
+          return null;
+        }
+
+        return {
+          ...meta,
+          coordinates: bestRoute.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+          distanceMeters: bestRoute.distance || 0,
+          durationSeconds: bestRoute.duration || 0,
+        };
+      };
+
+      try {
+        if (driverLocation && pickupLocation) {
+          const courierToPickup = await fetchRoadRoute(driverLocation, pickupLocation, {
+            id: 'courier-pickup',
+            label: 'Courier to pickup',
+            color: '#f97316',
+          });
+          if (courierToPickup) {
+            nextLegs.push(courierToPickup);
+          }
+        }
+
+        if (pickupLocation && dropoffLocation) {
+          const pickupToDropoff = await fetchRoadRoute(pickupLocation, dropoffLocation, {
+            id: 'pickup-dropoff',
+            label: 'Pickup to dropoff',
+            color: '#4f46e5',
+          });
+          if (pickupToDropoff) {
+            nextLegs.push(pickupToDropoff);
+          }
+        } else if (driverLocation && dropoffLocation) {
+          const courierToDropoff = await fetchRoadRoute(driverLocation, dropoffLocation, {
+            id: 'courier-dropoff',
+            label: 'Courier to dropoff',
+            color: '#10b981',
+          });
+          if (courierToDropoff) {
+            nextLegs.push(courierToDropoff);
+          }
+        }
+
+        setRouteLegs(nextLegs);
+      } catch (routeError) {
+        console.error('Road routing failed', routeError);
+        setRouteLegs([]);
+        setError((current) =>
+          current || 'Could not load the real road route right now. Please try again in a moment.',
+        );
+      }
+    };
+
+    buildRoadRoutes();
+  }, [driverLocation, pickupLocation, dropoffLocation]);
+
   // Determine which coordinates we successfully have to draw bounds and polylines
   const activeMarkers = [];
   if (driverLocation) activeMarkers.push(driverLocation);
   if (pickupLocation) activeMarkers.push(pickupLocation);
   if (dropoffLocation) activeMarkers.push(dropoffLocation);
 
-  const routePlan = useMemo(() => {
-    if (!pickupLocation && !dropoffLocation) {
-      return null;
-    }
-
-    const toKmLabel = (distanceMeters) => `${(distanceMeters / 1000).toFixed(2)} km`;
-    const legs = [];
-
-    if (driverLocation && pickupLocation) {
-      const courierToPickup = createDijkstraRoute([driverLocation, pickupLocation], {
-        rows: 12,
-        cols: 12,
-      });
-      if (courierToPickup) {
-        legs.push({
-          id: 'courier-pickup',
-          label: 'Courier to pickup',
-          color: '#f97316',
-          coordinates: courierToPickup.coordinates,
-          distanceLabel: toKmLabel(courierToPickup.distanceMeters),
-        });
-      }
-    }
-
-    if (pickupLocation && dropoffLocation) {
-      const pickupToDropoff = createDijkstraRoute([pickupLocation, dropoffLocation], {
-        rows: 14,
-        cols: 14,
-      });
-      if (pickupToDropoff) {
-        legs.push({
-          id: 'pickup-dropoff',
-          label: 'Pickup to dropoff',
-          color: '#4f46e5',
-          coordinates: pickupToDropoff.coordinates,
-          distanceLabel: toKmLabel(pickupToDropoff.distanceMeters),
-        });
-      }
-    } else if (driverLocation && dropoffLocation) {
-      const courierToDropoff = createDijkstraRoute([driverLocation, dropoffLocation], {
-        rows: 14,
-        cols: 14,
-      });
-      if (courierToDropoff) {
-        legs.push({
-          id: 'courier-dropoff',
-          label: 'Courier to dropoff',
-          color: '#10b981',
-          coordinates: courierToDropoff.coordinates,
-          distanceLabel: toKmLabel(courierToDropoff.distanceMeters),
-        });
-      }
-    }
-
-    return legs;
-  }, [driverLocation, pickupLocation, dropoffLocation]);
+  const routePlan = useMemo(
+    () =>
+      routeLegs.map((leg) => ({
+        ...leg,
+        distanceLabel: `${(leg.distanceMeters / 1000).toFixed(2)} km`,
+        durationLabel: `${Math.max(1, Math.round(leg.durationSeconds / 60))} min`,
+      })),
+    [routeLegs],
+  );
 
   // Default to a world view or a specific place if nothing exists
   const defaultCenter = driverLocation || pickupLocation || dropoffLocation || [27.7172, 85.3240]; // Kathmandu default coords
@@ -197,7 +230,10 @@ const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
                 <div className="address-badge bg-indigo-50">
                   <Navigation size={16} className="text-indigo-600" />
                   <span>
-                    <b>Dijkstra route:</b> {routePlan.map((leg) => `${leg.label} ${leg.distanceLabel}`).join(' | ')}
+                    <b>Road route:</b>{' '}
+                    {routePlan
+                      .map((leg) => `${leg.label} ${leg.distanceLabel}, ${leg.durationLabel}`)
+                      .join(' | ')}
                   </span>
                 </div>
               ) : null}
