@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { X, Navigation, Package, MapPin, AlertCircle, Loader2 } from 'lucide-react';
 import './FullScreenDeliveryMap.css';
+import { createDijkstraRoute } from '../utils/dijkstraRoute';
 
 // Custom icons for map markers
 const driverIcon = new L.Icon({
@@ -100,6 +101,63 @@ const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
   if (pickupLocation) activeMarkers.push(pickupLocation);
   if (dropoffLocation) activeMarkers.push(dropoffLocation);
 
+  const routePlan = useMemo(() => {
+    if (!pickupLocation && !dropoffLocation) {
+      return null;
+    }
+
+    const toKmLabel = (distanceMeters) => `${(distanceMeters / 1000).toFixed(2)} km`;
+    const legs = [];
+
+    if (driverLocation && pickupLocation) {
+      const courierToPickup = createDijkstraRoute([driverLocation, pickupLocation], {
+        rows: 12,
+        cols: 12,
+      });
+      if (courierToPickup) {
+        legs.push({
+          id: 'courier-pickup',
+          label: 'Courier to pickup',
+          color: '#f97316',
+          coordinates: courierToPickup.coordinates,
+          distanceLabel: toKmLabel(courierToPickup.distanceMeters),
+        });
+      }
+    }
+
+    if (pickupLocation && dropoffLocation) {
+      const pickupToDropoff = createDijkstraRoute([pickupLocation, dropoffLocation], {
+        rows: 14,
+        cols: 14,
+      });
+      if (pickupToDropoff) {
+        legs.push({
+          id: 'pickup-dropoff',
+          label: 'Pickup to dropoff',
+          color: '#4f46e5',
+          coordinates: pickupToDropoff.coordinates,
+          distanceLabel: toKmLabel(pickupToDropoff.distanceMeters),
+        });
+      }
+    } else if (driverLocation && dropoffLocation) {
+      const courierToDropoff = createDijkstraRoute([driverLocation, dropoffLocation], {
+        rows: 14,
+        cols: 14,
+      });
+      if (courierToDropoff) {
+        legs.push({
+          id: 'courier-dropoff',
+          label: 'Courier to dropoff',
+          color: '#10b981',
+          coordinates: courierToDropoff.coordinates,
+          distanceLabel: toKmLabel(courierToDropoff.distanceMeters),
+        });
+      }
+    }
+
+    return legs;
+  }, [driverLocation, pickupLocation, dropoffLocation]);
+
   // Default to a world view or a specific place if nothing exists
   const defaultCenter = driverLocation || pickupLocation || dropoffLocation || [27.7172, 85.3240]; // Kathmandu default coords
 
@@ -135,6 +193,14 @@ const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
                 <MapPin size={16} className="text-green-600" /> 
                 <span><b>Dropoff:</b> {job.buyerLocation} {dropoffLocation ? '✓' : '(!)'}</span>
               </div>
+              {routePlan?.length ? (
+                <div className="address-badge bg-indigo-50">
+                  <Navigation size={16} className="text-indigo-600" />
+                  <span>
+                    <b>Dijkstra route:</b> {routePlan.map((leg) => `${leg.label} ${leg.distanceLabel}`).join(' | ')}
+                  </span>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -164,25 +230,15 @@ const FullScreenDeliveryMap = ({ job, driverLocation, onClose }) => {
               </Marker>
             )}
 
-            {/* Draw lines to show the general route if both points exist */}
-            {pickupLocation && dropoffLocation && (
-              <Polyline 
-                positions={[pickupLocation, dropoffLocation]} 
-                color="#4f46e5" 
-                weight={3} 
-                dashArray="10, 10" 
-                opacity={0.6}
+            {routePlan?.map((leg) => (
+              <Polyline
+                key={leg.id}
+                positions={leg.coordinates}
+                color={leg.color}
+                weight={5}
+                opacity={0.85}
               />
-            )}
-            
-            {/* Draw driver to target line if applicable */}
-            {driverLocation && dropoffLocation && (
-               <Polyline 
-                 positions={[driverLocation, dropoffLocation]} 
-                 color="#10b981" 
-                 weight={4} 
-               />
-            )}
+            ))}
 
             <MapBoundsController markers={activeMarkers} />
           </MapContainer>
